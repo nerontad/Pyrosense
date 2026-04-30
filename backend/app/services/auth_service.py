@@ -2,6 +2,7 @@ import uuid
 from app.database.connection import execute_query, execute_one
 from app.utils.security import hash_password, verify_password, create_access_token
 
+#Registra un nuevo usuario en la base de datos.
 def registrar_usuario(nombre: str, email: str, password: str, telegram_chat_id: str = None):
     existente = execute_one(
         "SELECT id FROM usuarios WHERE email = %s",
@@ -20,6 +21,7 @@ def registrar_usuario(nombre: str, email: str, password: str, telegram_chat_id: 
     )
     return execute_one("SELECT * FROM usuarios WHERE id = %s", (user_id,))
 
+#Login de usuario, retorna el token y el usuario.
 def login_usuario(email: str, password: str):
     usuario = execute_one(
         "SELECT * FROM usuarios WHERE email = %s",
@@ -33,6 +35,7 @@ def login_usuario(email: str, password: str):
     token = create_access_token({"sub": usuario["id"], "email": usuario["email"]})
     return {"token": token, "usuario": usuario}
 
+#Obtiene un usuario por su id.
 def obtener_usuario_por_id(user_id: str):
     return execute_one(
         "SELECT id, nombre, email, telegram_chat_id, creado_en FROM usuarios WHERE id = %s",
