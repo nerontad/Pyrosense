@@ -1,0 +1,42 @@
+# Entornos virtuales Python
+.venv/
+venv/
+backend/venv/
+backend/.venv/
+**/venv/
+**/.venv/
+
+# Python
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Variables de entorno
+.env
+backend/.env
+
+# Videos generados
+backend/videos/
+
+# Modelo ONNX (archivo grande)
+backend/models/best.onnx
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# VS Code
+.vscode/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de prueba
+backend/test_config.py
+prueba.py
+
+# MySQL Workbench
+*.mwb
+*.mwb.bak
