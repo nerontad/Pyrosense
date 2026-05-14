@@ -1,7 +1,6 @@
-import uuid
 from fastapi import APIRouter, HTTPException, Depends
 from app.schemas.camara import CamaraCreate, CamaraResponse, CamaraUpdate
-from app.database.connection import execute_query, execute_one
+from app.repositories import camara_repo
 from app.routers.auth import get_current_user
 from typing import List
 from app.services.stream_service import iniciar_stream, detener_stream, streams_activos
@@ -11,65 +10,49 @@ router = APIRouter(prefix="/camaras", tags=["Cámaras"])
 
 @router.post("/", response_model=CamaraResponse)
 def crear_camara(data: CamaraCreate, usuario=Depends(get_current_user)):
-    cam_id = str(uuid.uuid4())
-    execute_query(
-        """INSERT INTO camaras (id, usuario_id, ubicacion_id, nombre, url_rtsp)
-           VALUES (%s, %s, %s, %s, %s)""",
-        (cam_id, usuario["id"], data.ubicacion_id, data.nombre, data.url_rtsp)
+    return camara_repo.crear(
+        usuario_id=usuario["id"],
+        ubicacion_id=data.ubicacion_id,
+        nombre=data.nombre,
+        url_rtsp=data.url_rtsp
     )
-    return execute_one("SELECT * FROM camaras WHERE id = %s", (cam_id,))
 
 @router.get("/", response_model=List[CamaraResponse])
 def listar_camaras(usuario=Depends(get_current_user)):
-    return execute_query(
-        "SELECT * FROM camaras WHERE usuario_id = %s ORDER BY creado_en DESC",
-        (usuario["id"],), fetch=True
-    )
+    return camara_repo.listar_por_usuario(usuario["id"])
 
 @router.get("/{cam_id}", response_model=CamaraResponse)
 def obtener_camara(cam_id: str, usuario=Depends(get_current_user)):
-    cam = execute_one(
-        "SELECT * FROM camaras WHERE id = %s AND usuario_id = %s",
-        (cam_id, usuario["id"])
-    )
+    cam = camara_repo.obtener_por_id_y_usuario(cam_id, usuario["id"])
     if not cam:
         raise HTTPException(status_code=404, detail="Cámara no encontrada")
     return cam
 
 @router.patch("/{cam_id}", response_model=CamaraResponse)
 def actualizar_camara(cam_id: str, data: CamaraUpdate, usuario=Depends(get_current_user)):
-    cam = execute_one(
-        "SELECT * FROM camaras WHERE id = %s AND usuario_id = %s",
-        (cam_id, usuario["id"])
-    )
+    cam = camara_repo.obtener_por_id_y_usuario(cam_id, usuario["id"])
     if not cam:
         raise HTTPException(status_code=404, detail="Cámara no encontrada")
     if data.nombre is not None:
-        execute_query("UPDATE camaras SET nombre = %s WHERE id = %s", (data.nombre, cam_id))
+        camara_repo.actualizar_nombre(cam_id, data.nombre)
     if data.url_rtsp is not None:
-        execute_query("UPDATE camaras SET url_rtsp = %s WHERE id = %s", (data.url_rtsp, cam_id))
+        camara_repo.actualizar_url_rtsp(cam_id, data.url_rtsp)
     if data.activo is not None:
-        execute_query("UPDATE camaras SET activo = %s WHERE id = %s", (data.activo, cam_id))
-    return execute_one("SELECT * FROM camaras WHERE id = %s", (cam_id,))
+        camara_repo.actualizar_activo(cam_id, data.activo)
+    return camara_repo.obtener_por_id(cam_id)
 
 @router.delete("/{cam_id}")
 def eliminar_camara(cam_id: str, usuario=Depends(get_current_user)):
-    cam = execute_one(
-        "SELECT * FROM camaras WHERE id = %s AND usuario_id = %s",
-        (cam_id, usuario["id"])
-    )
+    cam = camara_repo.obtener_por_id_y_usuario(cam_id, usuario["id"])
     if not cam:
         raise HTTPException(status_code=404, detail="Cámara no encontrada")
-    execute_query("DELETE FROM camaras WHERE id = %s", (cam_id,))
+    camara_repo.eliminar(cam_id)
     return {"mensaje": "Cámara eliminada"}
 
 
 @router.post("/{cam_id}/stream/iniciar")
 def iniciar_stream_camara(cam_id: str, usuario=Depends(get_current_user)):
-    cam = execute_one(
-        "SELECT * FROM camaras WHERE id = %s AND usuario_id = %s",
-        (cam_id, usuario["id"])
-    )
+    cam = camara_repo.obtener_por_id_y_usuario(cam_id, usuario["id"])
     if not cam:
         raise HTTPException(status_code=404, detail="Cámara no encontrada")
     if not cam["activo"]:
@@ -79,10 +62,7 @@ def iniciar_stream_camara(cam_id: str, usuario=Depends(get_current_user)):
 
 @router.post("/{cam_id}/stream/detener")
 def detener_stream_camara(cam_id: str, usuario=Depends(get_current_user)):
-    cam = execute_one(
-        "SELECT * FROM camaras WHERE id = %s AND usuario_id = %s",
-        (cam_id, usuario["id"])
-    )
+    cam = camara_repo.obtener_por_id_y_usuario(cam_id, usuario["id"])
     if not cam:
         raise HTTPException(status_code=404, detail="Cámara no encontrada")
     detener_stream(cam_id)

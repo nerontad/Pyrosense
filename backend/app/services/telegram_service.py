@@ -1,9 +1,8 @@
 import asyncio
-import concurrent.futures
 from telegram import Bot
 from telegram.error import TelegramError
 from app.config import get_settings
-from app.database.connection import execute_query
+from app.repositories import video_repo
 
 settings = get_settings()
 
@@ -17,10 +16,7 @@ async def _enviar_video_async(chat_id: str, ruta_video: str, caption: str, alert
                 caption=caption,
                 supports_streaming=True
             )
-        execute_query(
-            "UPDATE videos_alerta SET enviado_telegram = 1 WHERE alerta_id = %s",
-            (alerta_id,)
-        )
+        video_repo.marcar_enviado_telegram(alerta_id)
         print(f"Telegram: video enviado a {chat_id}")
     except TelegramError as e:
         print(f"Telegram error: {e}")
@@ -45,7 +41,6 @@ def enviar_alerta_video(
         f"📊 Confianza: {confianza:.0%}"
     )
     try:
-        # asyncio.run() crea su propio event loop en cualquier hilo
         asyncio.run(
             _enviar_video_async(chat_id, ruta_video, caption, alerta_id)
         )

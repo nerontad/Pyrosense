@@ -2,18 +2,14 @@ import subprocess
 import os
 from datetime import datetime
 from app.config import get_settings
-from app.database.connection import execute_one
+from app.repositories import camara_repo
 
 settings = get_settings()
 
 def grabar_clip(camara_id: str) -> dict | None:
     os.makedirs(settings.video_output_dir, exist_ok=True)
 
-    # Obtener URL RTSP de la cámara desde la BD
-    camara = execute_one(
-        "SELECT url_rtsp FROM camaras WHERE id = %s",
-        (camara_id,)
-    )
+    camara = camara_repo.obtener_url_rtsp(camara_id)
     if not camara:
         print(f"Cámara {camara_id} no encontrada en BD")
         return None

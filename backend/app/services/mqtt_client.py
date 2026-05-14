@@ -1,10 +1,8 @@
 import json
-import uuid
-import threading
 import paho.mqtt.client as mqtt
 from datetime import datetime
 from app.config import get_settings
-from app.database.connection import execute_query, execute_one
+from app.repositories import lectura_repo, dispositivo_repo
 
 settings = get_settings()
 
@@ -12,8 +10,9 @@ settings = get_settings()
 # para enviarlo por WebSocket sin consultar la BD
 ultimas_lecturas: dict = {}
 
-# Callbacks que se ejecutan cuando llega una lectura nueva
-# El WebSocket se suscribirá aquí
+# --- Patrón Observer ---
+# Callbacks que se ejecutan cuando llega una lectura nueva.
+# El WebSocket se suscribe aquí.
 _suscriptores: list = []
 
 def suscribir(callback):
@@ -26,25 +25,6 @@ def _notificar(lectura: dict):
         except Exception:
             pass
 
-def _guardar_lectura(dispositivo_id: str, datos: dict):
-    lectura_id = str(uuid.uuid4())
-    execute_query(
-        """INSERT INTO lecturas_sensores
-           (id, dispositivo_id, temperatura, humedad, co2_ppm)
-           VALUES (%s, %s, %s, %s, %s)""",
-        (
-            lectura_id,
-            dispositivo_id,
-            datos.get("temperatura"),
-            datos.get("humedad"),
-            datos.get("co2")
-        )
-    )
-    lectura = execute_one(
-        "SELECT * FROM lecturas_sensores WHERE id = %s",
-        (lectura_id,)
-    )
-    return lectura
 
 def _on_connect(client, userdata, flags, rc):
     if rc == 0:
@@ -64,19 +44,19 @@ def _on_message(client, userdata, msg):
             print("MQTT: payload sin dispositivo_id, ignorando")
             return
 
-        # Verificar que el dispositivo existe en la BD
-        dispositivo = execute_one(
-            "SELECT id FROM dispositivos_iot WHERE id = %s AND activo = 1",
-            (dispositivo_id,)
-        )
-        if not dispositivo:
+        if not dispositivo_repo.existe_activo(dispositivo_id):
             print(f"MQTT: dispositivo {dispositivo_id} no encontrado o inactivo")
             return
 
-        # Guardar en MySQL
-        lectura = _guardar_lectura(dispositivo_id, payload)
+        # Persistir lectura vía repositorio
+        lectura_repo.crear(
+            dispositivo_id=dispositivo_id,
+            temperatura=payload.get("temperatura"),
+            humedad=payload.get("humedad"),
+            co2_ppm=payload.get("co2")
+        )
 
-        # Guardar en memoria para WebSocket
+        # Cachear en memoria para WebSocket
         ultimas_lecturas[dispositivo_id] = {
             "dispositivo_id": dispositivo_id,
             "temperatura": payload.get("temperatura"),
@@ -85,7 +65,7 @@ def _on_message(client, userdata, msg):
             "registrado_en": datetime.now().isoformat()
         }
 
-        # Notificar a los WebSockets suscritos
+        # Notificar a observadores (WebSockets)
         _notificar(ultimas_lecturas[dispositivo_id])
 
     except json.JSONDecodeError:
@@ -109,7 +89,6 @@ def iniciar_mqtt():
 
     try:
         _client.connect(settings.mqtt_broker, settings.mqtt_port, keepalive=60)
-        # loop_start() corre en un hilo separado sin bloquear FastAPI
         _client.loop_start()
         print("MQTT iniciado en hilo secundario")
     except Exception as e:

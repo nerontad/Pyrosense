@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from app.schemas.usuario import UsuarioResponse
-from app.database.connection import execute_query, execute_one
+from app.repositories import usuario_repo
 from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
@@ -11,8 +11,5 @@ def obtener_perfil(usuario=Depends(get_current_user)):
 
 @router.patch("/me/telegram")
 def actualizar_telegram(chat_id: str, usuario=Depends(get_current_user)):
-    execute_query(
-        "UPDATE usuarios SET telegram_chat_id = %s WHERE id = %s",
-        (chat_id, usuario["id"])
-    )
+    usuario_repo.actualizar_telegram(usuario["id"], chat_id)
     return {"mensaje": "Telegram configurado correctamente"}

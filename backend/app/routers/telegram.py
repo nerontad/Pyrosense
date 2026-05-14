@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request
-from app.database.connection import execute_query, execute_one
+from app.repositories import usuario_repo
 from app.config import get_settings
 
 settings = get_settings()
@@ -12,17 +12,12 @@ async def webhook(request: Request):
         message = data.get("message", {})
         chat_id = str(message.get("chat", {}).get("id", ""))
         texto   = message.get("text", "")
-        email   = None
 
         if not chat_id:
             return {"ok": True}
 
         if texto == "/start":
-            # Buscar si ya existe el usuario con este chat_id
-            usuario = execute_one(
-                "SELECT id, nombre FROM usuarios WHERE telegram_chat_id = %s",
-                (chat_id,)
-            )
+            usuario = usuario_repo.obtener_por_telegram_chat(chat_id)
             if usuario:
                 await _responder(chat_id,
                     f"✅ Hola {usuario['nombre']}, ya estás registrado.\n"
@@ -41,8 +36,6 @@ async def webhook(request: Request):
 
 async def _responder(chat_id: str, texto: str):
     import httpx
-    from app.config import get_settings
-    settings = get_settings()
     async with httpx.AsyncClient() as client:
         await client.post(
             f"https://api.telegram.org/bot{settings.telegram_token}/sendMessage",
