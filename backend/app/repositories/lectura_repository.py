@@ -1,36 +1,46 @@
 import uuid
-from typing import Optional, List
-from app.repositories.base import BaseRepository
+from app.repositories.base_repository import BaseRepository
 
 
 class LecturaRepository(BaseRepository):
-    tabla = "lecturas_sensores"
-
-    def crear(self, dispositivo_id: str, temperatura: Optional[float],
-              humedad: Optional[float], co2_ppm: Optional[float]) -> dict:
+    def crear(self, dispositivo_id: str, datos: dict):
+        # Registra una nueva lectura de sensores en la base de datos
         lectura_id = str(uuid.uuid4())
         self._query(
             """INSERT INTO lecturas_sensores
                (id, dispositivo_id, temperatura, humedad, co2_ppm)
                VALUES (%s, %s, %s, %s, %s)""",
-            (lectura_id, dispositivo_id, temperatura, humedad, co2_ppm)
+            (
+                lectura_id,
+                dispositivo_id,
+                datos.get("temperatura"),
+                datos.get("humedad"),
+                datos.get("co2")
+            )
         )
         return self.obtener_por_id(lectura_id)
 
-    def listar_por_dispositivo_y_usuario(self, dispositivo_id: str,
-                                         usuario_id: str,
-                                         limite: int = 50) -> List[dict]:
+    def obtener_por_id(self, lectura_id: str):
+        # Obtiene una lectura específica por ID
+        return self._one(
+            "SELECT * FROM lecturas_sensores WHERE id = %s",
+            (lectura_id,)
+        )
+
+    def listar_por_dispositivo(self, dispositivo_id: str, usuario_id: str, limite: int = 50):
+        # Retorna historial de lecturas del dispositivo (verificando propiedad)
         return self._query(
             """SELECT l.* FROM lecturas_sensores l
                JOIN dispositivos_iot d ON d.id = l.dispositivo_id
                WHERE l.dispositivo_id = %s AND d.usuario_id = %s
                ORDER BY l.registrado_en DESC LIMIT %s""",
-            (dispositivo_id, usuario_id, limite), fetch=True
-        ) or []
+            (dispositivo_id, usuario_id, limite),
+            fetch=True
+        )
 
-    def ultima_por_dispositivo_y_usuario(self, dispositivo_id: str,
-                                         usuario_id: str) -> Optional[dict]:
-        return self._query_one(
+    def ultima_por_dispositivo(self, dispositivo_id: str, usuario_id: str):
+        # Obtiene la lectura más reciente disponible del dispositivo
+        return self._one(
             """SELECT l.* FROM lecturas_sensores l
                JOIN dispositivos_iot d ON d.id = l.dispositivo_id
                WHERE l.dispositivo_id = %s AND d.usuario_id = %s

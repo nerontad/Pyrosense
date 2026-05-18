@@ -1,37 +1,40 @@
+# Configuración de la aplicación desde variables de entorno
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
 class Settings(BaseSettings):
-    # Base de datos
+    # Configuración de base de datos PostgreSQL
     db_host: str
     db_port: int
     db_name: str
     db_user: str
     db_password: str
 
-    # JWT
+    # Configuración de autenticación con JWT
     secret_key: str
     algorithm: str
     access_token_expire_minutes: int
 
-    # MQTT
+    # Configuración MQTT para comunicación IoT
     mqtt_broker: str
     mqtt_port: int
     mqtt_topic: str
 
-    # Telegram
+    # Token para notificaciones por Telegram
     telegram_token: str
 
-    # Modelo ONNX
+    # Configuración del modelo de IA (ONNX)
     model_path: str
     confidence_threshold: float
+    model_drive_id: str
 
-    # Video
+    # Configuración de grabación de videos
     video_output_dir: str
     buffer_seconds: int
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "protected_namespaces": ()}
 
+# Singleton: retorna la misma instancia de Settings
 @lru_cache()
 def get_settings() -> Settings:
     return Settings()

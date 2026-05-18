@@ -1,9 +1,11 @@
+# Conexión a base de datos MySQL con pool de conexiones reutilizables
 import mysql.connector
 from mysql.connector import pooling
 from app.config import get_settings
 
 settings = get_settings()
 
+# Pool de 5 conexiones para evitar crear nuevas conexiones cada vez
 pool = pooling.MySQLConnectionPool(
     pool_name="detector_pool",
     pool_size=5,
@@ -16,9 +18,11 @@ pool = pooling.MySQLConnectionPool(
 )
 
 def get_connection():
+    # Obtener conexión del pool
     return pool.get_connection()
 
 def execute_query(query: str, params: tuple = None, fetch: bool = False):
+    # Ejecutar INSERT, UPDATE, DELETE y retornar ID generado o datos si fetch=True
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -32,6 +36,7 @@ def execute_query(query: str, params: tuple = None, fetch: bool = False):
         conn.close()
 
 def execute_one(query: str, params: tuple = None):
+    # Ejecutar SELECT y retornar un solo registro
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     try:

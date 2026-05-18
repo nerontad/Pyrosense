@@ -1,29 +1,23 @@
-# Entornos virtuales Python
-.venv/
-venv/
-backend/venv/
-backend/.venv/
-**/venv/
-**/.venv/
-
 # Python
-__pycache__/
-**/__pycache__/
-*.pyc
-*.pyo
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
 
 # Variables de entorno
-.env
 backend/.env
+backend/firebase_credentials.json
+
+# Modelo ONNX (muy pesado para GitHub)
+backend/models/best.onnx
 
 # Videos generados
 backend/videos/
 
-# Modelo ONNX (archivo grande)
-backend/models/best.onnx
-
 # Node
 frontend/node_modules/
+
+# Vite
 frontend/dist/
 
 # VS Code
@@ -33,10 +27,11 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 
-# Archivos de prueba
-backend/test_config.py
-prueba.py
+# Agente local
+agente_local/config.json
+agente_local/logs/
+agente_local/nssm.exe
+agente_local/nssm_temp/
+agente_local/nssm.zip
 
-# MySQL Workbench
-*.mwb
-*.mwb.bak
+.venv/

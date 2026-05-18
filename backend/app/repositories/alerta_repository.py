@@ -1,12 +1,10 @@
 import uuid
-from typing import Optional, List
-from app.repositories.base import BaseRepository
+from app.repositories.base_repository import BaseRepository
 
 
 class AlertaRepository(BaseRepository):
-    tabla = "alertas"
-
     def crear(self, camara_id: str, tipo_id: int, confianza: float) -> str:
+        # Registra una nueva alerta de incendio detectada por IA
         alerta_id = str(uuid.uuid4())
         self._query(
             """INSERT INTO alertas (id, camara_id, tipo_id, confianza)
@@ -15,27 +13,29 @@ class AlertaRepository(BaseRepository):
         )
         return alerta_id
 
-    def listar_por_usuario(self, usuario_id: str, limite: int = 20,
-                           solo_pendientes: bool = False) -> List[dict]:
+    def listar_por_usuario(self, usuario_id: str, limite: int = 20, solo_pendientes: bool = False):
+        # Lista alertas del usuario, opcionalmente solo no revisadas
         filtro = "AND a.revisado = 0" if solo_pendientes else ""
         return self._query(
             f"""SELECT a.* FROM alertas a
                 JOIN camaras c ON c.id = a.camara_id
                 WHERE c.usuario_id = %s {filtro}
                 ORDER BY a.ocurrido_en DESC LIMIT %s""",
-            (usuario_id, limite), fetch=True
-        ) or []
+            (usuario_id, limite),
+            fetch=True
+        )
 
-    def obtener_por_id_y_usuario(self, alerta_id: str,
-                                 usuario_id: str) -> Optional[dict]:
-        return self._query_one(
+    def obtener_por_id_y_usuario(self, alerta_id: str, usuario_id: str):
+        # Obtiene detalles de una alerta verificando propiedad
+        return self._one(
             """SELECT a.* FROM alertas a
                JOIN camaras c ON c.id = a.camara_id
                WHERE a.id = %s AND c.usuario_id = %s""",
             (alerta_id, usuario_id)
         )
 
-    def marcar_revisada(self, alerta_id: str) -> None:
+    def marcar_revisada(self, alerta_id: str):
+        # Marca una alerta como revisada por el usuario
         self._query(
             "UPDATE alertas SET revisado = 1 WHERE id = %s",
             (alerta_id,)

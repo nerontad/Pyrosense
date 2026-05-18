@@ -1,3 +1,4 @@
+# Servicio de grabación de video: capturar clip de video cuando se detecta incendio
 import subprocess
 import os
 from datetime import datetime
@@ -7,9 +8,10 @@ from app.repositories import camara_repo
 settings = get_settings()
 
 def grabar_clip(camara_id: str) -> dict | None:
+    # Grabar video con ffmpeg desde URL RTSP de la cámara
     os.makedirs(settings.video_output_dir, exist_ok=True)
 
-    camara = camara_repo.obtener_url_rtsp(camara_id)
+    camara = camara_repo.obtener_por_id(camara_id)
     if not camara:
         print(f"Cámara {camara_id} no encontrada en BD")
         return None
@@ -22,6 +24,7 @@ def grabar_clip(camara_id: str) -> dict | None:
     print(f"Grabando clip con ffmpeg: {url_rtsp}")
 
     try:
+        # Comando ffmpeg: capturar duración configurada y comprimir
         cmd = [
             "ffmpeg",
             "-rtsp_transport", "tcp",
