@@ -3,6 +3,7 @@ import PageShell from '../components/PageShell'
 import Modal from '../components/Modal'
 import api from '../services/api'
 
+// Página para administrar dispositivos IoT y sus ubicaciones
 export default function Dispositivos() {
   const [dispositivos, setDispositivos] = useState([])
   const [ubicaciones, setUbicaciones]   = useState([])
@@ -21,6 +22,7 @@ export default function Dispositivos() {
 
   useEffect(() => { cargarDatos() }, [])
 
+  // Carga dispositivos y ubicaciones en paralelo
   const cargarDatos = async () => {
     setCargando(true)
     try {
@@ -40,6 +42,7 @@ export default function Dispositivos() {
     setModalDisp(true)
   }
 
+  // Crea un nuevo dispositivo IoT
   const guardarDispositivo = async () => {
     if (!formDisp.nombre || !formDisp.ubicacion_id) {
       setErrorDisp('Todos los campos son obligatorios'); return
@@ -59,11 +62,13 @@ export default function Dispositivos() {
     } finally { setGuardandoDisp(false) }
   }
 
+  // Activa o desactiva un dispositivo
   const toggleDisp = async (disp) => {
     await api.patch(`/dispositivos/${disp.id}`, { activo: !disp.activo })
     setDispositivos(prev => prev.map(d => d.id === disp.id ? { ...d, activo: !d.activo } : d))
   }
 
+  // Elimina un dispositivo tras confirmación
   const eliminarDisp = async (id) => {
     if (!confirm('¿Eliminar este dispositivo?')) return
     try {
@@ -79,6 +84,7 @@ export default function Dispositivos() {
     setModalUbi(true)
   }
 
+  // Crea una nueva ubicación
   const guardarUbicacion = async () => {
     if (!formUbi.nombre) { setErrorUbi('El nombre es obligatorio'); return }
     setGuardandoUbi(true); setErrorUbi('')
@@ -92,6 +98,7 @@ export default function Dispositivos() {
     } finally { setGuardandoUbi(false) }
   }
 
+  // Elimina una ubicación (falla si está en uso)
   const eliminarUbi = async (id) => {
     if (!confirm('¿Eliminar esta ubicación?')) return
     try {

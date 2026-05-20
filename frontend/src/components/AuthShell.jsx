@@ -1,11 +1,12 @@
+// Layout de las páginas de autenticación (split-screen con hero + formulario)
 export default function AuthShell({ title, subtitle, icon = '🔥', children, footer }) {
   return (
     <div className="min-h-screen grid lg:grid-cols-2 relative overflow-hidden">
-      {/* Hero (lado izquierdo) */}
+      {/* Panel izquierdo: hero animado con la marca */}
       <aside className="hidden lg:flex relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-ember-700 via-red-800 to-ink-950"/>
         <div className="absolute inset-0 bg-grid opacity-30"/>
-        {/* Embers flotando */}
+        {/* Partículas tipo brasas que flotan */}
         {[...Array(14)].map((_, i) => (
           <span
             key={i}
@@ -71,7 +72,7 @@ export default function AuthShell({ title, subtitle, icon = '🔥', children, fo
         </div>
       </aside>
 
-      {/* Form (lado derecho) */}
+      {/* Panel derecho: contenido del formulario */}
       <section className="relative flex items-center justify-center px-4 py-10 lg:py-12">
         <div className="absolute inset-0 lg:hidden bg-radial-ember pointer-events-none"/>
         <div className="relative w-full max-w-md">

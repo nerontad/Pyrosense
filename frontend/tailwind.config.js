@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+// Tokens visuales personalizados de la app
 export default {
   content: [
     "./index.html",
@@ -6,11 +7,13 @@ export default {
   ],
   theme: {
     extend: {
+      // Tipografías
       fontFamily: {
         sans: ['"Inter"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         display: ['"Space Grotesk"', '"Inter"', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
+      // Paleta de colores de la marca (azul-noche + naranja-fuego)
       colors: {
         ink: {
           950: '#070a14',
@@ -33,17 +36,20 @@ export default {
           900: '#7c220a',
         },
       },
+      // Fondos con gradientes y patrones
       backgroundImage: {
         'grid-faint': "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)",
         'radial-ember': "radial-gradient(circle at 20% 0%, rgba(255,91,20,0.18), transparent 55%), radial-gradient(circle at 100% 100%, rgba(239,68,68,0.12), transparent 50%)",
         'gradient-ember': "linear-gradient(135deg, #ff7a36 0%, #ed3f00 60%, #b91c1c 100%)",
       },
+      // Sombras: efecto fuego y glassmorphism
       boxShadow: {
         'ember':       '0 10px 40px -10px rgba(255,91,20,0.55), 0 0 0 1px rgba(255,91,20,0.25) inset',
         'ember-soft':  '0 8px 30px -10px rgba(255,91,20,0.35)',
         'glass':       '0 8px 32px 0 rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06) inset',
         'glass-lg':    '0 20px 60px -10px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08) inset',
       },
+      // Animaciones reutilizables
       animation: {
         'pulse-soft':   'pulseSoft 2.4s ease-in-out infinite',
         'flicker':      'flicker 3s ease-in-out infinite',
@@ -52,6 +58,7 @@ export default {
         'glow-pulse':   'glowPulse 2.8s ease-in-out infinite',
         'fade-in-up':   'fadeInUp .5s ease-out both',
       },
+      // Definición de cada animación
       keyframes: {
         pulseSoft: {
           '0%,100%': { opacity: 1 },

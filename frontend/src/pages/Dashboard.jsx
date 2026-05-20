@@ -6,17 +6,21 @@ import GraficoSensor from '../components/GraficoSensor'
 import { useWebSocket } from '../hooks/useWebSocket'
 import api from '../services/api'
 
+// Vista principal: KPIs, sensores en vivo y gráfico por dispositivo
 export default function Dashboard() {
   const [dispositivos, setDispositivos] = useState([])
   const [lecturas, setLecturas] = useState({})
   const [alertasRecientes, setAlertasRecientes] = useState([])
+  // WebSocket que recibe lecturas en tiempo real
   const { datos, conectado } = useWebSocket('/ws/sensores')
 
+  // Carga inicial de dispositivos y últimas alertas
   useEffect(() => {
     api.get('/dispositivos/').then(res => setDispositivos(res.data)).catch(() => {})
     api.get('/alertas/?limite=5').then(res => setAlertasRecientes(res.data)).catch(() => {})
   }, [])
 
+  // Aplica las lecturas recibidas por WS sobre el estado
   useEffect(() => {
     if (!datos) return
     if (datos.tipo === 'lecturas_iniciales') {
@@ -26,6 +30,7 @@ export default function Dashboard() {
     }
   }, [datos])
 
+  // Métricas agregadas mostradas en la cabecera
   const stats = calcularStats(dispositivos, lecturas, alertasRecientes)
 
   return (
@@ -135,6 +140,7 @@ export default function Dashboard() {
   )
 }
 
+// Tarjeta de indicador (KPI) con color y glow
 function KpiCard({ label, value, hint, icon, color = 'ember' }) {
   const colors = {
     ember:   { glow: 'from-ember-500/20',   text: 'text-ember-300',   ring: 'ring-ember-500/20' },
@@ -161,6 +167,7 @@ function KpiCard({ label, value, hint, icon, color = 'ember' }) {
   )
 }
 
+// Estado vacío cuando no hay dispositivos registrados
 function EmptyState() {
   return (
     <div className="panel py-16 text-center">
@@ -182,6 +189,7 @@ function EmptyState() {
   )
 }
 
+// Calcula promedios y conteos para mostrar en KPIs
 function calcularStats(dispositivos, lecturas, alertas) {
   const total = dispositivos.length
   const ls = Object.values(lecturas).filter(l => l && typeof l === 'object')

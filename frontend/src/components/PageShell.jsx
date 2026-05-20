@@ -1,5 +1,6 @@
 import Navbar from './Navbar'
 
+// Layout estándar de páginas internas: sidebar + título + contenido
 export default function PageShell({ title, subtitle, actions, children, max = 'max-w-7xl' }) {
   return (
     <div className="min-h-screen relative">

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import AuthShell from '../components/AuthShell'
 
+// Página de registro de nuevo usuario
 export default function Registro() {
   const [form, setForm] = useState({ nombre: '', email: '', password: '', confirmar: '' })
   const [error, setError] = useState('')
@@ -10,8 +11,10 @@ export default function Registro() {
   const { registro } = useAuth()
   const navigate = useNavigate()
 
+  // Nivel de seguridad de la contraseña ingresada
   const fuerza = calcularFuerza(form.password)
 
+  // Valida y crea la cuenta en Firebase
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -137,6 +140,7 @@ export default function Registro() {
   )
 }
 
+// Calcula la fortaleza de la contraseña (0 a 4)
 function calcularFuerza(p) {
   if (!p) return { nivel: 0, label: '', color: '', text: '' }
   let n = 0

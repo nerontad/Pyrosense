@@ -3,6 +3,7 @@ import PageShell from '../components/PageShell'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 
+// Página de cuenta del usuario: Telegram y contraseña
 export default function Perfil() {
   const { usuario, cambiarPassword } = useAuth()
 
@@ -17,6 +18,7 @@ export default function Perfil() {
 
   const initial = (usuario?.nombre || usuario?.email || '?')[0].toUpperCase()
 
+  // Guarda el chat_id de Telegram en el perfil del usuario
   const guardarTelegram = async () => {
     setCargandoTelegram(true)
     setMsgTelegram({ tipo: '', texto: '' })
@@ -30,6 +32,7 @@ export default function Perfil() {
     }
   }
 
+  // Cambia la contraseña en Firebase tras validar
   const guardarPassword = async () => {
     setMsgPassword({ tipo: '', texto: '' })
     if (passwords.nueva !== passwords.confirmar) {
@@ -146,6 +149,7 @@ export default function Perfil() {
   )
 }
 
+// Bloque visual para cada sección del perfil
 function Section({ icon, title, desc, children }) {
   return (
     <section className="panel p-5 sm:p-6 mb-5">
@@ -164,6 +168,7 @@ function Section({ icon, title, desc, children }) {
   )
 }
 
+// Banner de mensaje OK / error
 function Mensaje({ msg }) {
   if (!msg.texto) return null
   const ok = msg.tipo === 'ok'

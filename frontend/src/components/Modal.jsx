@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 
+// Modal reutilizable con backdrop, soporte ESC y bloqueo de scroll
 export default function Modal({ open, onClose, title, subtitle, children, footer, size = 'md' }) {
+  // Cierra con ESC y bloquea el scroll del body mientras está abierto
   useEffect(() => {
     if (!open) return
     const onKey = (e) => { if (e.key === 'Escape') onClose?.() }

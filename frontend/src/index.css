@@ -1,13 +1,16 @@
+/* Fuentes externas */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Estilos base del documento */
 @layer base {
   html, body, #root {
     height: 100%;
   }
+  /* Fondo con gradientes radiales (color ambiente) */
   body {
     @apply font-sans text-zinc-200 antialiased;
     background-color: #070a14;
@@ -18,10 +21,12 @@
       linear-gradient(180deg, #070a14 0%, #0b1020 100%);
     background-attachment: fixed;
   }
+  /* Color de selección de texto */
   ::selection {
     background: rgba(255, 91, 20, 0.45);
     color: #fff;
   }
+  /* Scrollbar personalizado */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -37,18 +42,22 @@
     background: linear-gradient(180deg, rgba(255,91,20,0.7), rgba(239,68,68,0.6));
     background-clip: padding-box;
   }
+  /* Fuerza tema oscuro en inputs nativos */
   input, select, textarea {
     color-scheme: dark;
   }
 }
 
+/* Componentes reutilizables */
 @layer components {
+  /* Tarjetas con efecto vidrio */
   .glass {
     @apply bg-white/[0.03] border border-white/[0.07] backdrop-blur-xl;
   }
   .glass-strong {
     @apply bg-white/[0.05] border border-white/[0.10] backdrop-blur-xl;
   }
+  /* Panel base de todas las tarjetas */
   .panel {
     @apply rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01]
            border border-white/[0.08] shadow-glass;
@@ -56,6 +65,7 @@
   .panel-hover {
     @apply hover:border-white/20 hover:from-white/[0.06] hover:to-white/[0.02] transition;
   }
+  /* Texto con gradiente de fuego */
   .ember-text {
     background: linear-gradient(120deg, #ffb070 0%, #ff5b14 50%, #ef4444 100%);
     -webkit-background-clip: text;
@@ -66,6 +76,7 @@
     background: linear-gradient(180deg, rgba(255,91,20,0.6), rgba(239,68,68,0.4)) border-box;
     border: 1px solid transparent;
   }
+  /* Botón principal */
   .btn-ember {
     @apply relative inline-flex items-center justify-center gap-2
            px-4 py-2.5 rounded-xl text-sm font-semibold text-white
@@ -74,6 +85,7 @@
            active:scale-[.98] transition-all duration-200
            disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-ember-soft;
   }
+  /* Botón secundario / cancelar */
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2
            px-4 py-2.5 rounded-xl text-sm font-medium
@@ -81,6 +93,7 @@
            hover:bg-white/[0.07] hover:text-white hover:border-white/20
            active:scale-[.98] transition;
   }
+  /* Botón destructivo */
   .btn-danger {
     @apply inline-flex items-center justify-center gap-2
            px-4 py-2.5 rounded-xl text-sm font-medium
@@ -88,6 +101,7 @@
            hover:bg-red-500/20 hover:text-red-200
            active:scale-[.98] transition;
   }
+  /* Input base */
   .input-base {
     @apply w-full bg-white/[0.04] border border-white/[0.08]
            text-white placeholder:text-zinc-500
@@ -96,9 +110,11 @@
            focus:ring-2 focus:ring-ember-500/30
            transition;
   }
+  /* Etiqueta sobre inputs */
   .label-base {
     @apply block text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1.5;
   }
+  /* Chips de estado (badges pequeños) */
   .chip {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
            text-[11px] font-semibold border;
@@ -111,20 +127,25 @@
   .chip-info    { @apply chip bg-sky-500/10    text-sky-300    border-sky-500/30; }
 }
 
+/* Utilidades extra */
 @layer utilities {
+  /* Patrón de cuadrícula sutil */
   .bg-grid {
     background-image:
       linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
     background-size: 32px 32px;
   }
+  /* Brillo del texto */
   .text-shadow-ember {
     text-shadow: 0 0 24px rgba(255,91,20,0.45);
   }
+  /* Desvanece el contenido hacia abajo */
   .mask-fade-b {
     mask-image: linear-gradient(180deg, #000 60%, transparent 100%);
     -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 100%);
   }
+  /* Fondo del efecto shimmer (loading) */
   .shimmer-bg {
     background: linear-gradient(90deg,
       rgba(255,255,255,0) 0%,

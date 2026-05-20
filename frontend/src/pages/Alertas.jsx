@@ -4,24 +4,30 @@ import AlertaBadge from '../components/AlertaBadge'
 import { useWebSocket } from '../hooks/useWebSocket'
 import api from '../services/api'
 
+// Página de historial de alertas detectadas
 export default function Alertas() {
   const [alertas, setAlertas]   = useState([])
   const [cargando, setCargando] = useState(true)
-  const [filtro, setFiltro]     = useState('todas') // todas | pendientes | revisadas
+  // Filtro activo: todas | pendientes | revisadas
+  const [filtro, setFiltro]     = useState('todas')
+  // WebSocket que avisa cuando se genera una nueva alerta
   const { datos } = useWebSocket('/ws/alertas')
 
+  // Carga inicial del historial
   useEffect(() => {
     api.get('/alertas/?limite=30')
       .then(res => setAlertas(res.data))
       .finally(() => setCargando(false))
   }, [])
 
+  // Refresca la lista cuando llega una alerta nueva por WS
   useEffect(() => {
     if (datos?.tipo === 'nueva_alerta') {
       api.get('/alertas/?limite=30').then(res => setAlertas(res.data))
     }
   }, [datos])
 
+  // Conteos para los chips del resumen
   const stats = useMemo(() => {
     const total = alertas.length
     const pendientes = alertas.filter(a => !a.revisado).length
@@ -30,12 +36,14 @@ export default function Alertas() {
     return { total, pendientes, incendio, humo }
   }, [alertas])
 
+  // Alertas filtradas según el filtro activo
   const visibles = alertas.filter(a => {
     if (filtro === 'pendientes') return !a.revisado
     if (filtro === 'revisadas')  return a.revisado
     return true
   })
 
+  // Marca la alerta como revisada en el backend y en el estado local
   const marcarRevisada = async (id) => {
     await api.patch(`/alertas/${id}/revisar`)
     setAlertas(prev => prev.map(a => a.id === id ? { ...a, revisado: true } : a))

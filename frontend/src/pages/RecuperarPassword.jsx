@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import AuthShell from '../components/AuthShell'
 
+// Página para enviar un correo de recuperación de contraseña
 export default function RecuperarPassword() {
   const [email, setEmail]       = useState('')
   const [enviado, setEnviado]   = useState(false)

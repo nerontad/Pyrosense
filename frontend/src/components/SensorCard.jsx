@@ -1,3 +1,4 @@
+// Paletas y rangos válidos por tipo de sensor
 const PALETAS = {
   naranja: {
     text:  'text-ember-300',
@@ -33,14 +34,16 @@ const PALETAS = {
   },
 }
 
+// Tarjeta de lectura de un sensor con anillo de progreso
 export default function SensorCard({ titulo, valor, unidad, icono, color = 'azul', estado = 'live' }) {
   const p = PALETAS[color] || PALETAS.azul
   const v = (valor !== null && valor !== undefined) ? Number(valor) : null
+  // Calcula el porcentaje del valor dentro del rango [min, max]
   const pct = v !== null
     ? Math.max(0, Math.min(1, (v - p.range.min) / (p.range.max - p.range.min)))
     : 0
 
-  // SVG ring constants
+  // Cálculo del anillo SVG (radio, perímetro y offset del trazo)
   const R = 28
   const C = 2 * Math.PI * R
   const offset = C * (1 - pct)
@@ -74,7 +77,7 @@ export default function SensorCard({ titulo, valor, unidad, icono, color = 'azul
           </div>
         </div>
 
-        {/* Anillo de progreso */}
+        {/* Anillo circular SVG con el avance del valor */}
         <div className="relative">
           <svg width="72" height="72" viewBox="0 0 72 72" className="-rotate-90">
             <circle cx="36" cy="36" r={R} className={p.track} fill="none" strokeWidth="6" strokeLinecap="round"/>

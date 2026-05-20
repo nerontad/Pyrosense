@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import Hls from 'hls.js'
 
+// Reproductor de stream HLS de cámara con overlay de estado
 export default function VideoPlayer({ urlHls }) {
   const videoRef = useRef(null)
-  const [estado, setEstado] = useState('cargando') // cargando | live | error
+  // Estado del stream: cargando | live | error
+  const [estado, setEstado] = useState('cargando')
 
+  // Inicializa HLS y maneja eventos del reproductor
   useEffect(() => {
     const video = videoRef.current
     if (!video || !urlHls) return
@@ -35,7 +38,7 @@ export default function VideoPlayer({ urlHls }) {
         playsInline
       />
 
-      {/* Overlay LIVE */}
+      {/* Indicador de estado en la esquina */}
       <div className="pointer-events-none absolute top-3 left-3 flex items-center gap-2">
         <span className={`px-2 py-1 rounded-md text-[10px] font-bold tracking-wider
                           backdrop-blur-md flex items-center gap-1.5

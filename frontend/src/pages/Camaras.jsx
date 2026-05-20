@@ -4,8 +4,10 @@ import VideoPlayer from '../components/VideoPlayer'
 import Modal from '../components/Modal'
 import api from '../services/api'
 
+// URL base del servidor de streams HLS
 const VPS_URL = 'https://detector-incendios.duckdns.org'
 
+// Página de gestión de cámaras con visualización en vivo
 export default function Camaras() {
   const [camaras, setCamaras]           = useState([])
   const [ubicaciones, setUbicaciones]   = useState([])
@@ -18,6 +20,7 @@ export default function Camaras() {
 
   useEffect(() => { cargarDatos() }, [])
 
+  // Carga cámaras y ubicaciones en paralelo
   const cargarDatos = async () => {
     setCargando(true)
     try {
@@ -34,6 +37,7 @@ export default function Camaras() {
     }
   }
 
+  // Abre el modal en modo crear o editar
   const abrirModal = (camara = null) => {
     setEditando(camara)
     setForm(camara
@@ -51,6 +55,7 @@ export default function Camaras() {
     setError('')
   }
 
+  // Crea o actualiza la cámara en el backend
   const guardar = async () => {
     if (!form.nombre || !form.url_rtsp || !form.ubicacion_id) {
       setError('Todos los campos son obligatorios')
@@ -73,6 +78,7 @@ export default function Camaras() {
     }
   }
 
+  // Elimina la cámara tras confirmación
   const eliminar = async (id) => {
     if (!confirm('¿Eliminar esta cámara?')) return
     try {
@@ -207,6 +213,7 @@ export default function Camaras() {
   )
 }
 
+// Placeholder mientras cargan las cámaras
 function SkeletonGrid() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

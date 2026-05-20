@@ -5,11 +5,13 @@ import {
 } from 'recharts'
 import api from '../services/api'
 
+// Gráfico de área con histórico de lecturas (temp / humedad / CO₂)
 export default function GraficoSensor({ dispositivoId }) {
   const [datos, setDatos] = useState([])
   const [serie, setSerie] = useState('temperatura')
   const [cargando, setCargando] = useState(true)
 
+  // Carga las últimas 30 lecturas del dispositivo
   useEffect(() => {
     setCargando(true)
     api.get(`/lecturas/${dispositivoId}?limite=30`)
@@ -26,6 +28,7 @@ export default function GraficoSensor({ dispositivoId }) {
       .finally(() => setCargando(false))
   }, [dispositivoId])
 
+  // Series disponibles en el gráfico
   const series = [
     { key: 'temperatura', label: 'Temp °C',    color: '#ff7a36' },
     { key: 'humedad',     label: 'Humedad %',  color: '#38bdf8' },

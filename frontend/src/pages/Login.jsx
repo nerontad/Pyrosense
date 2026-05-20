@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import AuthShell from '../components/AuthShell'
 
+// Página de inicio de sesión
 export default function Login() {
   const [form, setForm]     = useState({ email: '', password: '' })
   const [error, setError]   = useState('')
@@ -11,6 +12,7 @@ export default function Login() {
   const { login }           = useAuth()
   const navigate            = useNavigate()
 
+  // Envía credenciales y traduce errores de Firebase a texto en español
   const handleSubmit = async (e) => {
     e.preventDefault()
     setCargando(true)

@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useEffect, useRef, useState } from 'react'
 
+// Items del menú lateral
 const NAV_ITEMS = [
   { to: '/',             label: 'Dashboard',  icon: IconDashboard },
   { to: '/camaras',      label: 'Cámaras',    icon: IconCamera },
@@ -9,6 +10,7 @@ const NAV_ITEMS = [
   { to: '/dispositivos', label: 'IoT',        icon: IconChip },
 ]
 
+// Barra de navegación principal (sidebar en desktop, drawer en móvil)
 export default function Navbar() {
   const { usuario, logout } = useAuth()
   const navigate = useNavigate()
@@ -17,6 +19,7 @@ export default function Navbar() {
   const [movilAbierto, setMovilAbierto] = useState(false)
   const dropdownRef = useRef(null)
 
+  // Cierra el menú de usuario al hacer clic fuera
   useEffect(() => {
     const onClick = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -27,10 +30,12 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
 
+  // Cierra el drawer móvil al cambiar de ruta
   useEffect(() => {
     setMovilAbierto(false)
   }, [location.pathname])
 
+  // Cierra sesión y redirige al login
   const handleLogout = async () => {
     await logout()
     navigate('/login')
@@ -139,6 +144,7 @@ export default function Navbar() {
   )
 }
 
+// Logo de la marca
 function Brand({ compact = false }) {
   return (
     <Link to="/" className={`flex items-center gap-2.5 ${compact ? '' : 'px-4 py-4'}`}>
@@ -156,6 +162,7 @@ function Brand({ compact = false }) {
   )
 }
 
+// Enlace del menú (resalta el activo)
 function NavLink({ item, active }) {
   const Icon = item.icon
   return (
@@ -178,6 +185,7 @@ function NavLink({ item, active }) {
   )
 }
 
+// Pie del sidebar con avatar y logout
 function SidebarFooter({ usuario, onLogout }) {
   const initial = (usuario?.nombre || usuario?.email || '?')[0].toUpperCase()
   return (

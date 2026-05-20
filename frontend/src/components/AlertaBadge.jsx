@@ -1,3 +1,4 @@
+// Badge con el tipo y confianza de una alerta detectada
 export default function AlertaBadge({ clase, confianza }) {
   const esIncendio = clase === 'fire' || clase === 'incendio'
   const pct = (confianza * 100).toFixed(0)
