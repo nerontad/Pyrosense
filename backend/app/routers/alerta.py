@@ -1,45 +1,68 @@
-# Router de alertas: listar, obtener y revisar alertas de incendio detectadas
 from fastapi import APIRouter, HTTPException, Depends
 from app.schemas.alerta import AlertaResponse, AlertaDetalle
-from app.repositories import alerta_repo, video_alerta_repo
+from app.database.connection import execute_query, execute_one
 from app.routers.auth import get_current_user
 from typing import List
 
 router = APIRouter(prefix="/alertas", tags=["Alertas"])
 
-
+# Lista las alertas del usuario con su video adjunto (si existe)
 @router.get("/", response_model=List[AlertaDetalle])
 def listar_alertas(
     limite: int = 20,
     solo_pendientes: bool = False,
     usuario=Depends(get_current_user)
 ):
-    # Listar alertas del usuario con opción de filtrar solo las no revisadas
-    alertas = alerta_repo.listar_por_usuario(
-        usuario["id"], limite=limite, solo_pendientes=solo_pendientes
+    # Filtro opcional para mostrar solo alertas no revisadas
+    filtro = "AND a.revisado = 0" if solo_pendientes else ""
+    alertas = execute_query(
+        f"""SELECT a.* FROM alertas a
+            JOIN camaras c ON c.id = a.camara_id
+            WHERE c.usuario_id = %s {filtro}
+            ORDER BY a.ocurrido_en DESC LIMIT %s""",
+        (usuario["id"], limite),
+        fetch=True
     )
+    # Adjunta el video correspondiente a cada alerta
     resultado = []
     for alerta in alertas:
-        video = video_alerta_repo.obtener_por_alerta(alerta["id"])
+        video = execute_one(
+            "SELECT * FROM videos_alerta WHERE alerta_id = %s",
+            (alerta["id"],)
+        )
         resultado.append({**alerta, "video": video})
     return resultado
 
-
+# Devuelve una alerta concreta con su video
 @router.get("/{alerta_id}", response_model=AlertaDetalle)
 def obtener_alerta(alerta_id: str, usuario=Depends(get_current_user)):
-    # Obtener detalles completos de una alerta con su video
-    alerta = alerta_repo.obtener_por_id_y_usuario(alerta_id, usuario["id"])
+    alerta = execute_one(
+        """SELECT a.* FROM alertas a
+           JOIN camaras c ON c.id = a.camara_id
+           WHERE a.id = %s AND c.usuario_id = %s""",
+        (alerta_id, usuario["id"])
+    )
     if not alerta:
         raise HTTPException(status_code=404, detail="Alerta no encontrada")
-    video = video_alerta_repo.obtener_por_alerta(alerta["id"])
+    video = execute_one(
+        "SELECT * FROM videos_alerta WHERE alerta_id = %s",
+        (alerta["id"],)
+    )
     return {**alerta, "video": video}
 
-
+# Marca la alerta como revisada por el usuario
 @router.patch("/{alerta_id}/revisar")
 def marcar_revisada(alerta_id: str, usuario=Depends(get_current_user)):
-    # Marcar alerta como revisada por el usuario
-    alerta = alerta_repo.obtener_por_id_y_usuario(alerta_id, usuario["id"])
+    alerta = execute_one(
+        """SELECT a.* FROM alertas a
+           JOIN camaras c ON c.id = a.camara_id
+           WHERE a.id = %s AND c.usuario_id = %s""",
+        (alerta_id, usuario["id"])
+    )
     if not alerta:
         raise HTTPException(status_code=404, detail="Alerta no encontrada")
-    alerta_repo.marcar_revisada(alerta_id)
+    execute_query(
+        "UPDATE alertas SET revisado = 1 WHERE id = %s",
+        (alerta_id,)
+    )
     return {"mensaje": "Alerta marcada como revisada"}

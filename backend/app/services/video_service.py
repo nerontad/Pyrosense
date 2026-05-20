@@ -1,30 +1,34 @@
-# Servicio de grabación de video: capturar clip de video cuando se detecta incendio
 import subprocess
 import os
 from datetime import datetime
 from app.config import get_settings
-from app.repositories import camara_repo
+from app.database.connection import execute_one
 
 settings = get_settings()
 
+# Graba un clip MP4 desde el stream RTSP de la cámara
 def grabar_clip(camara_id: str) -> dict | None:
-    # Grabar video con ffmpeg desde URL RTSP de la cámara
     os.makedirs(settings.video_output_dir, exist_ok=True)
 
-    camara = camara_repo.obtener_por_id(camara_id)
+    # Obtiene la URL RTSP original de la cámara
+    camara = execute_one(
+        "SELECT url_rtsp FROM camaras WHERE id = %s",
+        (camara_id,)
+    )
     if not camara:
         print(f"Cámara {camara_id} no encontrada en BD")
         return None
 
     url_rtsp = camara["url_rtsp"]
     duracion_seg = settings.buffer_seconds
+    # Nombre con timestamp para no sobrescribir
     nombre_archivo = f"alerta_{camara_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
     ruta = os.path.join(settings.video_output_dir, nombre_archivo)
 
     print(f"Grabando clip con ffmpeg: {url_rtsp}")
 
     try:
-        # Comando ffmpeg: capturar duración configurada y comprimir
+        # Ejecuta ffmpeg para grabar N segundos del stream
         cmd = [
             "ffmpeg",
             "-rtsp_transport", "tcp",
@@ -51,6 +55,7 @@ def grabar_clip(camara_id: str) -> dict | None:
             print("ffmpeg no generó el archivo de salida")
             return None
 
+        # Devuelve los metadatos del clip generado
         tamano = os.path.getsize(ruta)
         print(f"Clip grabado: {ruta} ({duracion_seg}s, {tamano} bytes)")
         return {

@@ -1,4 +1,3 @@
-# Servicio de streaming: captura video RTSP, realiza inferencia y guarda buffer de detecciones
 import cv2
 import threading
 import time
@@ -6,9 +5,10 @@ import subprocess
 from app.services.vision_service import vision
 from app.services.motor_alertas import procesar_deteccion
 
-# Diccionario de streams activos: {camara_id: StreamProcessor}
+# Registro de streams activos por camara_id
 _streams_activos: dict = {}
 
+# Procesa un stream RTSP de una cámara y ejecuta la detección IA
 class StreamProcessor:
     def __init__(self, camara_id: str, url_rtsp: str):
         self.camara_id   = camara_id
@@ -16,10 +16,11 @@ class StreamProcessor:
         self.activo      = False
         self._hilo       = None
         self._ffmpeg     = None
+        # Frames por segundo que se envían al modelo IA
         self.fps_proceso = 2
 
+    # Arranca el reenvío RTSP y el hilo de detección
     def iniciar(self):
-        # Iniciar stream en hilo separado
         if self.activo:
             return
         self.activo = True
@@ -28,26 +29,28 @@ class StreamProcessor:
         self._hilo.start()
         print(f"Stream iniciado: {self.camara_id}")
 
+    # Lanza ffmpeg en un hilo separado para reenviar el RTSP al servidor público
     def _iniciar_ffmpeg(self):
-        # Iniciar ffmpeg en hilo separado para retransmitir video
         hilo = threading.Thread(target=self._ffmpeg_loop, daemon=True)
         hilo.start()
         print(f"ffmpeg iniciado para: {self.camara_id}")
         time.sleep(5)
 
+    # Re-arranca ffmpeg automáticamente si se cae
     def _ffmpeg_loop(self):
-        # Loop infinito: capturar RTSP y retransmitir a VPS
         while self.activo:
             cmd = [
                 "ffmpeg",
                 "-rtsp_transport", "tcp",
                 "-timeout", "10000000",
                 "-i", self.url_rtsp,
-                "-c:v", "copy",
-                "-c:a", "copy",
+                "-c:v", "libx264",
+                "-preset", "ultrafast",
+                "-tune", "zerolatency",
+                "-c:a", "aac",
                 "-f", "rtsp",
                 "-rtsp_transport", "tcp",
-                f"rtsp://159.223.189.120:8554/{self.camara_id}",
+                f"rtsp://137.184.21.60:8554/{self.camara_id}",
                 "-y"
             ]
             print(f"ffmpeg conectando a: {self.url_rtsp}")
@@ -58,27 +61,28 @@ class StreamProcessor:
             )
             self._ffmpeg.wait()
 
+            # Si se cayó pero el stream sigue activo, reintenta tras 5 segundos
             if self.activo:
                 print(f"ffmpeg caído para {self.camara_id} — reintentando en 5s...")
                 time.sleep(5)
 
         print(f"ffmpeg_loop terminado: {self.camara_id}")
 
+    # Marca el stream como inactivo y mata el proceso ffmpeg
     def detener(self):
-        # Detener captura y ffmpeg
         self.activo = False
         if self._ffmpeg:
             self._ffmpeg.terminate()
             self._ffmpeg = None
         print(f"Stream detenido: {self.camara_id}")
 
+    # Lee frames del stream republicado y manda algunos al modelo de detección
     def _procesar(self):
-        # Leer video del VPS, inferir y procesar detecciones
-        url_lectura = f"rtsp://159.223.189.120:8554/{self.camara_id}"
+        url_lectura = f"rtsp://137.184.21.60:8554/{self.camara_id}"
 
-        # Esperar a que ffmpeg establezca la retransmisión
+        # Espera a que ffmpeg termine de empujar el stream
         time.sleep(15)
-        
+
         while self.activo:
             cap = cv2.VideoCapture(url_lectura)
             if not cap.isOpened():
@@ -92,23 +96,22 @@ class StreamProcessor:
 
             while self.activo:
                 ret, frame = cap.read()
+                # Si se pierde el stream, reconecta desde fuera
                 if not ret:
                     print(f"Stream VPS perdido — reconectando...")
                     cap.release()
                     time.sleep(5)
                     break
 
-                # Guardar frame en buffer para video de alerta
+                # Cada frame se guarda en el buffer (para luego grabar el clip)
                 vision.agregar_al_buffer(frame)
 
-                # Procesar frame según velocidad configurada
+                # Solo manda al modelo cada cierto intervalo (no cada frame)
                 ahora = time.time()
                 if (ahora - ultimo) >= intervalo:
                     ultimo = ahora
-                    # Ejecutar modelo de IA sobre frame
                     detecciones = vision.inferir(frame)
                     if detecciones:
-                        # Disparar flujo de generación de alerta
                         procesar_deteccion(self.camara_id, detecciones)
 
             if cap.isOpened():
@@ -117,8 +120,8 @@ class StreamProcessor:
         print(f"Stream cerrado: {self.camara_id}")
 
 
+# Crea y arranca un stream nuevo si no estaba ya activo
 def iniciar_stream(camara_id: str, url_rtsp: str):
-    # Crear y iniciar nuevo procesador de stream
     if camara_id in _streams_activos:
         print(f"Stream {camara_id} ya está activo")
         return
@@ -126,17 +129,17 @@ def iniciar_stream(camara_id: str, url_rtsp: str):
     processor.iniciar()
     _streams_activos[camara_id] = processor
 
+# Detiene el stream de una cámara y lo quita del registro
 def detener_stream(camara_id: str):
-    # Detener stream específico
     if camara_id in _streams_activos:
         _streams_activos[camara_id].detener()
         del _streams_activos[camara_id]
 
+# Detiene todos los streams (al cerrar la app)
 def detener_todos():
-    # Detener todos los streams activos
     for camara_id in list(_streams_activos.keys()):
         detener_stream(camara_id)
 
+# Lista los IDs de los streams actualmente activos
 def streams_activos() -> list:
-    # Retornar lista de IDs de streams activos
     return list(_streams_activos.keys())

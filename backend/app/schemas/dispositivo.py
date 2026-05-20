@@ -2,13 +2,13 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-# Esquema para crear nuevo dispositivo IoT (sensor)
+# Datos para crear un dispositivo IoT
 class DispositivoCreate(BaseModel):
     nombre: str
     ubicacion_id: str
     tipo_id: int
 
-# Esquema de respuesta con datos del dispositivo
+# Dispositivo IoT devuelto al cliente
 class DispositivoResponse(BaseModel):
     id: str
     nombre: str
@@ -17,7 +17,7 @@ class DispositivoResponse(BaseModel):
     activo: bool
     creado_en: datetime
 
-# Esquema para actualizar propiedades del dispositivo
+# Campos editables al actualizar un dispositivo
 class DispositivoUpdate(BaseModel):
     nombre: Optional[str] = None
     activo: Optional[bool] = None

@@ -1,4 +1,3 @@
-# Aplicación principal de FastAPI con configuración de CORS, routers y ciclo de vida
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -8,49 +7,63 @@ from app.routers import auth, usuario, dispositivo, camara, lectura, alerta, web
 from app.services.mqtt_client import iniciar_mqtt, detener_mqtt
 from app.services.vision_service import vision
 from app.services.stream_service import iniciar_stream, detener_todos
-from app.repositories import camara_repo
+from app.database.connection import execute_query
+from app.middleware.security import SecurityHeadersMiddleware
 import os
-
 settings = get_settings()
 
-# Ejecutar al iniciar y cerrar la aplicación
+
+# Arranque y cierre de la app: MQTT, modelo IA y streams de cámaras.
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Iniciando sistema detector de incendios...")
-    # Conectar broker MQTT
     iniciar_mqtt()
     print(f"Modelo cargado: {vision.modelo_cargado()}")
 
-    # Iniciar streaming de video en todas las cámaras activas
-    camaras = camara_repo.listar_activas()
+    # Lanza un stream por cada cámara activa registrada en BD
+    camaras = execute_query(
+        "SELECT id, url_rtsp, nombre FROM camaras WHERE activo = 1",
+        fetch=True
+    )
     for cam in camaras:
         print(f"Iniciando detección automática: {cam['nombre']}")
         iniciar_stream(cam["id"], cam["url_rtsp"])
 
     yield
-    # Cerrar conexiones al apagar
+    # Detiene streams y MQTT al cerrar el proceso
     detener_todos()
     detener_mqtt()
     print("Cerrando sistema...")
 
-# Crear instancia de FastAPI
 app = FastAPI(
     title="Sistema Detector de Incendios",
     description="API REST para detección de incendios con IA e IoT",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
-# Configurar CORS para permitir solicitudes del frontend
+# Añade cabeceras de seguridad a cada respuesta HTTP
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Orígenes que pueden hacer peticiones cross-origin a la API
+ORIGENES_PERMITIDOS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://detector-incendios.vercel.app",
+]
+
+# CORS con métodos y headers concretos (no wildcard)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=ORIGENES_PERMITIDOS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
+    expose_headers=[],
+    max_age=600,
 )
 
-# Incluir routers de todas las secciones
+# Registro de routers de la API
 app.include_router(auth.router)
 app.include_router(usuario.router)
 app.include_router(dispositivo.router)
@@ -62,28 +75,16 @@ app.include_router(ubicacion.router)
 app.include_router(tipos.router)
 app.include_router(telegram.router)
 
-# Crear directorio de videos y servir como archivos estáticos
+# Sirve los videos generados por las detecciones
 os.makedirs("videos", exist_ok=True)
 app.mount("/videos", StaticFiles(directory="videos"), name="videos")
 
-# CORS para desarrollo y producción
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://detector-incendios.vercel.app"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
-# Endpoint raíz
 @app.get("/")
 def root():
     return {"mensaje": "Sistema detector de incendios activo"}
 
-# Endpoint de salud para verificar estado del servidor y modelo
+# Endpoint de healthcheck (estado del servicio y modelo IA)
 @app.get("/health")
 def health():
     return {
@@ -91,4 +92,3 @@ def health():
         "version": "1.0.0",
         "modelo_cargado": vision.modelo_cargado()
     }
-

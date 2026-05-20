@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-# Esquema de respuesta para un registro de alerta de incendio
+# Alerta básica detectada por la IA
 class AlertaResponse(BaseModel):
     id: str
     camara_id: str
@@ -12,7 +12,7 @@ class AlertaResponse(BaseModel):
     revisado: bool
     ocurrido_en: datetime
 
-# Esquema para un video asociado a una alerta
+# Metadatos del video grabado al detectarse una alerta
 class VideoAlertaResponse(BaseModel):
     id: str
     alerta_id: str
@@ -22,6 +22,6 @@ class VideoAlertaResponse(BaseModel):
     enviado_telegram: bool
     creado_en: datetime
 
-# Esquema con detalles completos de una alerta incluyendo video
+# Alerta con el video adjunto (vista de detalle)
 class AlertaDetalle(AlertaResponse):
     video: Optional[VideoAlertaResponse] = None

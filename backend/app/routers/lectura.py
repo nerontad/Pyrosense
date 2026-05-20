@@ -1,27 +1,38 @@
 from fastapi import APIRouter, Depends
 from app.schemas.lectura import LecturaResponse
-from app.repositories import lectura_repo
+from app.database.connection import execute_query
 from app.routers.auth import get_current_user
 from typing import List, Optional
 
-# API para obtener datos de sensores de dispositivos IoT
 router = APIRouter(prefix="/lecturas", tags=["Lecturas Sensores"])
 
-
+# Devuelve el histórico de lecturas de un dispositivo (limitado)
 @router.get("/{dispositivo_id}", response_model=List[LecturaResponse])
 def obtener_lecturas(
     dispositivo_id: str,
     limite: int = 50,
     usuario=Depends(get_current_user)
 ):
-    # Retorna historial de lecturas de sensores del dispositivo
-    return lectura_repo.listar_por_dispositivo(dispositivo_id, usuario["id"], limite=limite)
+    return execute_query(
+        """SELECT l.* FROM lecturas_sensores l
+           JOIN dispositivos_iot d ON d.id = l.dispositivo_id
+           WHERE l.dispositivo_id = %s AND d.usuario_id = %s
+           ORDER BY l.registrado_en DESC LIMIT %s""",
+        (dispositivo_id, usuario["id"], limite),
+        fetch=True
+    )
 
-
+# Devuelve solo la última lectura del dispositivo
 @router.get("/{dispositivo_id}/ultima", response_model=Optional[LecturaResponse])
 def obtener_ultima_lectura(
     dispositivo_id: str,
     usuario=Depends(get_current_user)
 ):
-    # Obtiene la lectura más reciente del dispositivo
-    return lectura_repo.ultima_por_dispositivo(dispositivo_id, usuario["id"])
+    from app.database.connection import execute_one
+    return execute_one(
+        """SELECT l.* FROM lecturas_sensores l
+           JOIN dispositivos_iot d ON d.id = l.dispositivo_id
+           WHERE l.dispositivo_id = %s AND d.usuario_id = %s
+           ORDER BY l.registrado_en DESC LIMIT 1""",
+        (dispositivo_id, usuario["id"])
+    )

@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-# Esquema de respuesta para una lectura de sensores
+# Lectura de sensor devuelta al cliente
 class LecturaResponse(BaseModel):
     id: str
     dispositivo_id: str
@@ -11,7 +11,7 @@ class LecturaResponse(BaseModel):
     co2_ppm: Optional[float] = None
     registrado_en: datetime
 
-# Esquema para crear nueva lectura de sensores
+# Datos para insertar una lectura nueva
 class LecturaCreate(BaseModel):
     dispositivo_id: str
     temperatura: Optional[float] = None

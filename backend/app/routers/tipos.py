@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends
-from app.repositories import tipo_dispositivo_repo
+from app.database.connection import execute_query
 from app.routers.auth import get_current_user
 
-# API para obtener catálogo de tipos de dispositivos disponibles
 router = APIRouter(prefix="/tipos-dispositivo", tags=["Tipos"])
 
-
+# Lista el catálogo de tipos de dispositivo IoT
 @router.get("/")
 def listar_tipos(usuario=Depends(get_current_user)):
-    # Retorna el listado de tipos de dispositivo disponibles en el sistema
-    return tipo_dispositivo_repo.listar_todos()
+    return execute_query(
+        "SELECT * FROM tipos_dispositivo ORDER BY id ASC",
+        fetch=True
+    )

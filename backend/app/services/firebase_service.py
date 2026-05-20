@@ -1,13 +1,12 @@
-# Servicio de autenticación con Firebase: verificación de tokens y sincronización de usuarios
 import firebase_admin
 from firebase_admin import credentials, auth
-from app.repositories import usuario_repo
+from app.database.connection import execute_one, execute_query
+import uuid
 import os
 import json
 
-
+# Inicializa el SDK de Firebase Admin con credenciales de env o archivo local
 def _inicializar_firebase():
-    # Inicializar Firebase desde variables de entorno (producción) o archivo local
     if firebase_admin._apps:
         return
 
@@ -17,17 +16,15 @@ def _inicializar_firebase():
         creds_dict = json.loads(firebase_creds_str)
         cred = credentials.Certificate(creds_dict)
     else:
-        # Desarrollo: credenciales en archivo local
+        # Desarrollo local: archivo en disco
         cred = credentials.Certificate("firebase_credentials.json")
 
     firebase_admin.initialize_app(cred)
 
-
 _inicializar_firebase()
 
-
+# Verifica un ID token de Firebase y devuelve sus claims
 def verificar_token_firebase(id_token: str) -> dict | None:
-    # Validar token JWT de Firebase
     try:
         decoded = auth.verify_id_token(id_token)
         return decoded
@@ -35,17 +32,34 @@ def verificar_token_firebase(id_token: str) -> dict | None:
         print(f"Error verificando token Firebase: {e}")
         return None
 
-
+# Busca al usuario por UID o email, y si no existe lo crea en la BD local
 def obtener_o_crear_usuario(firebase_uid: str, email: str, nombre: str = None) -> dict:
-    # Obtener usuario del sistema o crear si no existe. Sincroniza con Firebase.
-    usuario = usuario_repo.obtener_por_firebase_uid(firebase_uid)
+    # Caso 1: ya existe con ese firebase_uid
+    usuario = execute_one(
+        "SELECT * FROM usuarios WHERE firebase_uid = %s",
+        (firebase_uid,)
+    )
     if usuario:
         return usuario
 
-    usuario = usuario_repo.obtener_por_email(email)
+    # Caso 2: existe con el mismo email pero sin uid (legacy) → vincular
+    usuario = execute_one(
+        "SELECT * FROM usuarios WHERE email = %s",
+        (email,)
+    )
     if usuario:
-        usuario_repo.vincular_firebase_uid(email, firebase_uid)
-        return usuario_repo.obtener_por_email(email)
+        execute_query(
+            "UPDATE usuarios SET firebase_uid = %s WHERE email = %s",
+            (firebase_uid, email)
+        )
+        return execute_one("SELECT * FROM usuarios WHERE email = %s", (email,))
 
+    # Caso 3: usuario nuevo → insertar
+    user_id = str(uuid.uuid4())
     nombre_final = nombre or email.split("@")[0]
-    return usuario_repo.crear(firebase_uid, email, nombre_final)
+    execute_query(
+        """INSERT INTO usuarios (id, firebase_uid, nombre, email, password_hash)
+           VALUES (%s, %s, %s, %s, %s)""",
+        (user_id, firebase_uid, nombre_final, email, "firebase_auth")
+    )
+    return execute_one("SELECT * FROM usuarios WHERE id = %s", (user_id,))

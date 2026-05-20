@@ -1,40 +1,47 @@
+import uuid
 from fastapi import APIRouter, Depends
-from app.repositories import ubicacion_repo
+from app.database.connection import execute_query, execute_one
 from app.routers.auth import get_current_user
 from typing import List
 from pydantic import BaseModel
 
-
-# Modelos para crear y retornar ubicaciones
+# Datos requeridos para crear una ubicación
 class UbicacionCreate(BaseModel):
     nombre: str
     descripcion: str = None
 
-
+# Estructura devuelta al consultar una ubicación
 class UbicacionResponse(BaseModel):
     id: str
     nombre: str
     descripcion: str = None
 
-
-# API para gestionar ubicaciones de dispositivos y cámaras
 router = APIRouter(prefix="/ubicaciones", tags=["Ubicaciones"])
 
-
+# Lista las ubicaciones del usuario actual
 @router.get("/", response_model=List[UbicacionResponse])
 def listar_ubicaciones(usuario=Depends(get_current_user)):
-    # Lista todas las ubicaciones del usuario
-    return ubicacion_repo.listar_por_usuario(usuario["id"])
+    return execute_query(
+        "SELECT * FROM ubicaciones WHERE usuario_id = %s ORDER BY nombre ASC",
+        (usuario["id"],),
+        fetch=True
+    )
 
-
+# Crea una nueva ubicación para el usuario
 @router.post("/", response_model=UbicacionResponse)
 def crear_ubicacion(data: UbicacionCreate, usuario=Depends(get_current_user)):
-    # Crea una nueva ubicación para organizar dispositivos y cámaras
-    return ubicacion_repo.crear(usuario["id"], data.nombre, data.descripcion)
+    ubi_id = str(uuid.uuid4())
+    execute_query(
+        "INSERT INTO ubicaciones (id, usuario_id, nombre, descripcion) VALUES (%s, %s, %s, %s)",
+        (ubi_id, usuario["id"], data.nombre, data.descripcion)
+    )
+    return execute_one("SELECT * FROM ubicaciones WHERE id = %s", (ubi_id,))
 
-
+# Elimina una ubicación del usuario
 @router.delete("/{ubi_id}")
 def eliminar_ubicacion(ubi_id: str, usuario=Depends(get_current_user)):
-    # Elimina una ubicación del usuario
-    ubicacion_repo.eliminar(ubi_id, usuario["id"])
+    execute_query(
+        "DELETE FROM ubicaciones WHERE id = %s AND usuario_id = %s",
+        (ubi_id, usuario["id"])
+    )
     return {"mensaje": "Ubicación eliminada"}
