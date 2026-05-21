@@ -2,7 +2,8 @@ import axios from 'axios'
 import { auth } from './firebase'
 
 const api = axios.create({
-  baseURL: 'https://detector-incendios-production.up.railway.app',
+  baseURL: 'proyecto-de-titulo-production.up.railway.app',
+  baseURL: 'http://localhost:8000',
   headers: { 'Content-Type': 'application/json' }
 })
 
