@@ -50,7 +50,7 @@ class StreamProcessor:
                 "-c:a", "aac",
                 "-f", "rtsp",
                 "-rtsp_transport", "tcp",
-                f"rtsp://137.184.21.60:8554/{self.camara_id}",
+                f"rtsp://159.223.189.120:8554/{self.camara_id}",
                 "-y"
             ]
             print(f"ffmpeg conectando a: {self.url_rtsp}")
@@ -78,7 +78,7 @@ class StreamProcessor:
 
     # Lee frames del stream republicado y manda algunos al modelo de detección
     def _procesar(self):
-        url_lectura = f"rtsp://137.184.21.60:8554/{self.camara_id}"
+        url_lectura = f"rtsp://159.223.189.120:8554/{self.camara_id}"
 
         # Espera a que ffmpeg termine de empujar el stream
         time.sleep(15)

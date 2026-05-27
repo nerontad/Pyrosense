@@ -2,7 +2,7 @@ import json
 import uuid
 import threading
 import paho.mqtt.client as mqtt
-from datetime import datetime
+from datetime import datetime, timezone
 from app.config import get_settings
 from app.database.connection import execute_query, execute_one
 
@@ -29,23 +29,33 @@ def _notificar(lectura: dict):
 # Inserta una lectura del sensor en la BD y la devuelve
 def _guardar_lectura(dispositivo_id: str, datos: dict):
     lectura_id = str(uuid.uuid4())
+    # Se almacena en UTC para que el frontend lo convierta a la zona local
+    registrado_en = datetime.now(timezone.utc).replace(tzinfo=None)
+    # Acepta `co2` (nombre nuevo) o `gas` (firmware antiguo)
+    co2 = datos.get("co2")
+    if co2 is None:
+        co2 = datos.get("gas")
     execute_query(
         """INSERT INTO lecturas_sensores
-           (id, dispositivo_id, temperatura, humedad, co2_ppm)
-           VALUES (%s, %s, %s, %s, %s)""",
+           (id, dispositivo_id, temperatura, humedad, co2_ppm, registrado_en)
+           VALUES (%s, %s, %s, %s, %s, %s)""",
         (
             lectura_id,
             dispositivo_id,
             datos.get("temperatura"),
             datos.get("humedad"),
-            datos.get("co2")
+            co2,
+            registrado_en,
         )
     )
-    lectura = execute_one(
-        "SELECT * FROM lecturas_sensores WHERE id = %s",
-        (lectura_id,)
-    )
-    return lectura
+    return {
+        "id": lectura_id,
+        "dispositivo_id": dispositivo_id,
+        "temperatura": datos.get("temperatura"),
+        "humedad": datos.get("humedad"),
+        "co2_ppm": co2,
+        "registrado_en": registrado_en,
+    }
 
 # Callback cuando se conecta al broker MQTT
 def _on_connect(client, userdata, flags, rc):
@@ -72,20 +82,22 @@ def _on_message(client, userdata, msg):
             "SELECT id FROM dispositivos_iot WHERE id = %s AND activo = 1",
             (dispositivo_id,)
         )
+        print(f"MQTT: dispositivo encontrado: {dispositivo}")
         if not dispositivo:
             print(f"MQTT: dispositivo {dispositivo_id} no encontrado o inactivo")
             return
 
         # Persiste la lectura en MySQL
         lectura = _guardar_lectura(dispositivo_id, payload)
+        print(f"MQTT: lectura guardada: {lectura}")
 
-        # Actualiza la cache en memoria para el WebSocket
+        # Actualiza la cache en memoria para el WebSocket (con la misma marca UTC)
         ultimas_lecturas[dispositivo_id] = {
             "dispositivo_id": dispositivo_id,
-            "temperatura": payload.get("temperatura"),
-            "humedad": payload.get("humedad"),
-            "co2_ppm": payload.get("co2"),
-            "registrado_en": datetime.now().isoformat()
+            "temperatura": lectura["temperatura"],
+            "humedad": lectura["humedad"],
+            "co2_ppm": lectura["co2_ppm"],
+            "registrado_en": lectura["registrado_en"].replace(tzinfo=timezone.utc).isoformat()
         }
 
         # Avisa a los suscriptores (WebSocket reenviará al frontend)
@@ -95,6 +107,8 @@ def _on_message(client, userdata, msg):
         print("MQTT: payload no es JSON válido")
     except Exception as e:
         print(f"MQTT error al procesar mensaje: {e}")
+        import traceback
+        traceback.print_exc()
 
 # Callback cuando se pierde la conexión MQTT
 def _on_disconnect(client, userdata, rc):
