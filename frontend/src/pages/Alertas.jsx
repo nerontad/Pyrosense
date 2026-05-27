@@ -4,12 +4,21 @@ import AlertaBadge from '../components/AlertaBadge'
 import { useWebSocket } from '../hooks/useWebSocket'
 import api from '../services/api'
 
+// Construye la URL pública del video usando el mismo host del API
+function urlVideoAlerta(rutaArchivo) {
+  if (!rutaArchivo) return null
+  const archivo = rutaArchivo.split(/[\\/]/).pop()
+  return `${api.defaults.baseURL}/videos/${archivo}`
+}
+
 // Página de historial de alertas detectadas
 export default function Alertas() {
   const [alertas, setAlertas]   = useState([])
   const [cargando, setCargando] = useState(true)
   // Filtro activo: todas | pendientes | revisadas
   const [filtro, setFiltro]     = useState('todas')
+  // Alerta cuyo video se está visualizando en el modal
+  const [verVideo, setVerVideo] = useState(null)
   // WebSocket que avisa cuando se genera una nueva alerta
   const { datos } = useWebSocket('/ws/alertas')
 
@@ -121,14 +130,12 @@ export default function Alertas() {
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   {alerta.video && (
-                    <a
-                      href={`http://127.0.0.1:8000/videos/${alerta.video.ruta_archivo.split(/[\\/]/).pop()}`}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      onClick={() => setVerVideo(alerta)}
                       className="btn-ghost px-3 py-1.5 text-xs"
                     >
                       <IconPlay/> Ver video
-                    </a>
+                    </button>
                   )}
                   {!alerta.revisado ? (
                     <button onClick={() => marcarRevisada(alerta.id)}
@@ -146,7 +153,83 @@ export default function Alertas() {
           ))}
         </div>
       )}
+
+      {/* Modal reproductor de video */}
+      {verVideo && (
+        <VideoModal
+          alerta={verVideo}
+          onClose={() => setVerVideo(null)}
+        />
+      )}
     </PageShell>
+  )
+}
+
+// Modal con player de video para la alerta seleccionada
+function VideoModal({ alerta, onClose }) {
+  const src = urlVideoAlerta(alerta.video?.ruta_archivo)
+
+  // Cierre con tecla Escape
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  return (
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center
+                 bg-black/80 backdrop-blur-sm p-4 animate-fade-in-up"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="panel max-w-3xl w-full p-4 sm:p-5"
+      >
+        <div className="flex items-center justify-between mb-3 gap-3">
+          <div>
+            <h3 className="text-white font-display font-semibold text-base">
+              {alerta.tipo_id === 1 ? '🔥 Incendio detectado' : '💨 Humo detectado'}
+            </h3>
+            <p className="text-zinc-400 text-xs mt-0.5">
+              {new Date(alerta.ocurrido_en).toLocaleString('es-CL', {
+                day: '2-digit', month: 'long', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+              })}
+              {alerta.confianza != null && (
+                <> · Confianza: {(alerta.confianza * 100).toFixed(0)}%</>
+              )}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="btn-ghost px-2.5 py-1.5 text-xs"
+            aria-label="Cerrar"
+          >
+            ✕
+          </button>
+        </div>
+
+        {src ? (
+          <video
+            src={src}
+            controls
+            autoPlay
+            className="w-full rounded-xl bg-black aspect-video"
+          />
+        ) : (
+          <div className="text-zinc-400 text-sm py-12 text-center">
+            No hay video disponible para esta alerta.
+          </div>
+        )}
+
+        {alerta.video?.ruta_archivo && (
+          <p className="text-zinc-500 text-[11px] font-mono mt-3 truncate">
+            {alerta.video.ruta_archivo}
+          </p>
+        )}
+      </div>
+    </div>
   )
 }
 
