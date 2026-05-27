@@ -12,7 +12,7 @@ export function useWebSocket(endpoint) {
     if (!token) return
 
     // Abre el WebSocket contra el backend en Railway
-    const wsUrl = 'wss://detector-incendios-production.up.railway.app'
+    const wsUrl = 'wss://proyecto-de-titulo-production.up.railway.app'
     const ws = new WebSocket(`${wsUrl}${endpoint}`)
     wsRef.current = ws
 
