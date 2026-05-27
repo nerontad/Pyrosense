@@ -1,4 +1,5 @@
 import json
+import time
 import uuid
 import threading
 import paho.mqtt.client as mqtt
@@ -7,6 +8,22 @@ from app.config import get_settings
 from app.database.connection import execute_query, execute_one
 
 settings = get_settings()
+
+# Intervalo mínimo entre guardados (global, todos los dispositivos)
+INTERVALO_GUARDADO_S = 120
+
+# Umbrales que fuerzan un guardado inmediato y generan alerta
+UMBRAL_TEMP_MAX    = 50.0   # °C
+UMBRAL_HUMEDAD_MIN = 20.0   # %
+UMBRAL_CO2_MAX     = 1000.0 # ppm
+
+# Cooldown entre alertas por dispositivo (no spamear cuando el umbral está alto)
+COOLDOWN_ALERTA_S = 300  # 5 min
+
+# Última vez que se guardó en BD (timer global)
+_ultimo_guardado_ts: float = 0.0
+# Última vez que se generó alerta por dispositivo
+_ultima_alerta_por_disp: dict = {}
 
 # Última lectura conocida de cada dispositivo (cache en memoria)
 ultimas_lecturas: dict = {}
@@ -25,6 +42,50 @@ def _notificar(lectura: dict):
             callback(lectura)
         except Exception:
             pass
+
+# Revisa si algún valor cruza los umbrales de incendio.
+# Devuelve un texto con el motivo si pasa, None si está todo OK.
+def _detectar_umbral(datos: dict):
+    temp = datos.get("temperatura")
+    hum  = datos.get("humedad")
+    co2  = datos.get("co2") if datos.get("co2") is not None else datos.get("gas")
+    if temp is not None and temp > UMBRAL_TEMP_MAX:
+        return f"temperatura {temp}°C > {UMBRAL_TEMP_MAX}°C"
+    if hum is not None and hum < UMBRAL_HUMEDAD_MIN:
+        return f"humedad {hum}% < {UMBRAL_HUMEDAD_MIN}%"
+    if co2 is not None and co2 > UMBRAL_CO2_MAX:
+        return f"co2 {co2} ppm > {UMBRAL_CO2_MAX} ppm"
+    return None
+
+# Inserta una alerta de sensor y notifica por WebSocket (con cooldown)
+def _generar_alerta_sensor(dispositivo_id: str, motivo: str):
+    ahora = time.time()
+    if (ahora - _ultima_alerta_por_disp.get(dispositivo_id, 0)) < COOLDOWN_ALERTA_S:
+        return
+    _ultima_alerta_por_disp[dispositivo_id] = ahora
+
+    alerta_id = str(uuid.uuid4())
+    try:
+        execute_query(
+            """INSERT INTO alertas (id, dispositivo_id, tipo_id, confianza)
+               VALUES (%s, %s, %s, %s)""",
+            (alerta_id, dispositivo_id, 1, 1.0)
+        )
+        print(f"Alerta sensor guardada ({motivo}) id={alerta_id}")
+    except Exception as e:
+        print(f"Alerta sensor: error al insertar: {e}")
+        return
+
+    try:
+        from app.routers.websocket import manager
+        manager.broadcast_alertas_threadsafe({
+            "tipo": "nueva_alerta",
+            "alerta_id": alerta_id,
+            "dispositivo_id": dispositivo_id,
+            "motivo": motivo,
+        })
+    except Exception as e:
+        print(f"Alerta sensor: error al notificar WS: {e}")
 
 # Inserta una lectura del sensor en la BD y la devuelve
 def _guardar_lectura(dispositivo_id: str, datos: dict):
@@ -87,21 +148,41 @@ def _on_message(client, userdata, msg):
             print(f"MQTT: dispositivo {dispositivo_id} no encontrado o inactivo")
             return
 
-        # Persiste la lectura en MySQL
-        lectura = _guardar_lectura(dispositivo_id, payload)
-        print(f"MQTT: lectura guardada: {lectura}")
+        # Normaliza el campo de CO2 (acepta `co2` o `gas` del firmware viejo)
+        co2_valor = payload.get("co2")
+        if co2_valor is None:
+            co2_valor = payload.get("gas")
 
-        # Actualiza la cache en memoria para el WebSocket (con la misma marca UTC)
+        # Actualiza la cache y notifica SIEMPRE (chart en vivo del frontend)
+        ahora_utc = datetime.now(timezone.utc)
         ultimas_lecturas[dispositivo_id] = {
             "dispositivo_id": dispositivo_id,
-            "temperatura": lectura["temperatura"],
-            "humedad": lectura["humedad"],
-            "co2_ppm": lectura["co2_ppm"],
-            "registrado_en": lectura["registrado_en"].replace(tzinfo=timezone.utc).isoformat()
+            "temperatura": payload.get("temperatura"),
+            "humedad":     payload.get("humedad"),
+            "co2_ppm":     co2_valor,
+            "registrado_en": ahora_utc.isoformat()
         }
-
-        # Avisa a los suscriptores (WebSocket reenviará al frontend)
         _notificar(ultimas_lecturas[dispositivo_id])
+
+        # Decide si toca persistir: por timer global o por umbral
+        global _ultimo_guardado_ts
+        ahora = time.time()
+        motivo_umbral = _detectar_umbral(payload)
+        debe_guardar = (
+            motivo_umbral is not None or
+            (ahora - _ultimo_guardado_ts) >= INTERVALO_GUARDADO_S
+        )
+
+        if debe_guardar:
+            lectura = _guardar_lectura(dispositivo_id, payload)
+            _ultimo_guardado_ts = ahora
+            motivo = motivo_umbral or f"intervalo {INTERVALO_GUARDADO_S}s"
+            print(f"MQTT: lectura guardada ({motivo}): {lectura}")
+            if motivo_umbral:
+                _generar_alerta_sensor(dispositivo_id, motivo_umbral)
+        else:
+            restante = INTERVALO_GUARDADO_S - (ahora - _ultimo_guardado_ts)
+            print(f"MQTT: lectura en vivo (no se persiste, faltan {restante:.0f}s)")
 
     except json.JSONDecodeError:
         print("MQTT: payload no es JSON válido")
