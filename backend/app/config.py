@@ -31,7 +31,13 @@ class Settings(BaseSettings):
     video_output_dir: str
     buffer_seconds: int
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "protected_namespaces": ()}
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "protected_namespaces": (),
+        # Ignora variables extra en .env (p.ej. MODEL_DRIVE_ID, claves obsoletas)
+        "extra": "ignore",
+    }
 
 # Devuelve la instancia cacheada de Settings
 @lru_cache()

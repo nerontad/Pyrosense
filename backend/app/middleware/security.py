@@ -46,6 +46,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if not path.startswith("/videos"):
             response.headers["Cache-Control"] = "no-store"
             response.headers["Pragma"] = "no-cache"
+        else:
+            # Permite que el frontend (Vercel) embeba el <video> desde Railway
+            response.headers["Cross-Origin-Resource-Policy"] = "cross-origin"
 
         # Quita cabeceras que revelan la tecnología del servidor
         for h in ("Server", "X-Powered-By"):

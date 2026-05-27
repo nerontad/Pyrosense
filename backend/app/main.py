@@ -7,6 +7,7 @@ from app.routers import auth, usuario, dispositivo, camara, lectura, alerta, web
 from app.services.mqtt_client import iniciar_mqtt, detener_mqtt
 from app.services.vision_service import vision
 from app.services.stream_service import iniciar_stream, detener_todos
+from app.services.limpieza_service import iniciar_limpieza, detener_limpieza
 from app.database.connection import execute_query
 from app.middleware.security import SecurityHeadersMiddleware
 import os
@@ -18,6 +19,7 @@ settings = get_settings()
 async def lifespan(app: FastAPI):
     print("Iniciando sistema detector de incendios...")
     iniciar_mqtt()
+    iniciar_limpieza()
     print(f"Modelo cargado: {vision.modelo_cargado()}")
 
     # Lanza un stream por cada cámara activa registrada en BD
@@ -30,9 +32,10 @@ async def lifespan(app: FastAPI):
         iniciar_stream(cam["id"], cam["url_rtsp"])
 
     yield
-    # Detiene streams y MQTT al cerrar el proceso
+    # Detiene streams, MQTT y job de limpieza al cerrar el proceso
     detener_todos()
     detener_mqtt()
+    detener_limpieza()
     print("Cerrando sistema...")
 
 app = FastAPI(
