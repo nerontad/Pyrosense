@@ -5,21 +5,26 @@ import uuid
 import os
 import json
 
-# Inicializa el SDK de Firebase Admin con credenciales de env o archivo local
+# Inicializa el SDK de Firebase Admin con credenciales de env o archivo local.
+# Si no hay credenciales (p.ej. en desarrollo local) la app NO se cae: solo
+# queda deshabilitada la verificación de tokens.
 def _inicializar_firebase():
     if firebase_admin._apps:
         return
 
-    firebase_creds_str = os.getenv("FIREBASE_CREDENTIALS")
-    if firebase_creds_str:
-        # Producción: credenciales en variable de entorno
-        creds_dict = json.loads(firebase_creds_str)
-        cred = credentials.Certificate(creds_dict)
-    else:
-        # Desarrollo local: archivo en disco
-        cred = credentials.Certificate("firebase_credentials.json")
-
-    firebase_admin.initialize_app(cred)
+    try:
+        firebase_creds_str = os.getenv("FIREBASE_CREDENTIALS")
+        if firebase_creds_str:
+            # Producción: credenciales en variable de entorno
+            creds_dict = json.loads(firebase_creds_str)
+            cred = credentials.Certificate(creds_dict)
+        else:
+            # Desarrollo local: archivo en disco
+            cred = credentials.Certificate("firebase_credentials.json")
+        firebase_admin.initialize_app(cred)
+    except Exception as e:
+        print(f"Firebase NO inicializado (sin credenciales): {e}. "
+              f"La autenticación con Firebase no funcionará hasta configurarlas.")
 
 _inicializar_firebase()
 

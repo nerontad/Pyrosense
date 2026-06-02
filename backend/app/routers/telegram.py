@@ -18,8 +18,11 @@ async def webhook(request: Request):
         if not chat_id:
             return {"ok": True}
 
+        # Normaliza el comando: tolera "/start algo" y "/start@NombreBot"
+        comando = texto.split()[0].split("@")[0] if texto else ""
+
         # Comando /start: vincula o saluda al usuario
-        if texto == "/start":
+        if comando == "/start":
             usuario = execute_one(
                 "SELECT id, nombre FROM usuarios WHERE telegram_chat_id = %s",
                 (chat_id,)

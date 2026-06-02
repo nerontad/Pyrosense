@@ -52,29 +52,43 @@ class VisionService:
             print(f"Error al cargar modelo ONNX: {e}")
             self.modelo = None
 
-    # Prepara un frame para entrar al modelo: resize, RGB, normaliza, batch
-    def preprocesar_frame(self, frame: np.ndarray) -> np.ndarray:
-        img = cv2.resize(frame, (640, 640))
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # Redimensiona manteniendo la proporción y rellena hasta 640x640 (letterbox).
+    # Sin esto la imagen se deforma y la confianza del modelo cae drásticamente.
+    # Devuelve el lienzo 640x640 y la escala aplicada (para revertir coordenadas).
+    def _letterbox(self, frame: np.ndarray):
+        h0, w0 = frame.shape[:2]
+        escala = 640 / max(h0, w0)
+        nw, nh = int(round(w0 * escala)), int(round(h0 * escala))
+        redim  = cv2.resize(frame, (nw, nh))
+        # Relleno gris (114) como en el entrenamiento de YOLO; imagen pegada arriba-izq.
+        lienzo = np.full((640, 640, 3), 114, dtype=np.uint8)
+        lienzo[:nh, :nw] = redim
+        return lienzo, escala
+
+    # Prepara un frame para entrar al modelo: letterbox, RGB, normaliza, batch
+    def preprocesar_frame(self, frame: np.ndarray):
+        lienzo, escala = self._letterbox(frame)
+        img = cv2.cvtColor(lienzo, cv2.COLOR_BGR2RGB)
         img = img.astype(np.float32) / 255.0
         img = np.transpose(img, (2, 0, 1))
         img = np.expand_dims(img, axis=0)
-        return img
+        return img, escala
 
     # Ejecuta el modelo sobre un frame y devuelve las detecciones encontradas
     def inferir(self, frame: np.ndarray) -> list:
         if self.modelo is None:
             return []
         try:
-            entrada = self.preprocesar_frame(frame)
+            entrada, escala = self.preprocesar_frame(frame)
             salida  = self.modelo.run(None, {self.input_name: entrada})
-            return self._procesar_salida(salida[0])
+            return self._procesar_salida(salida[0], escala)
         except Exception as e:
             print(f"Error en inferencia: {e}")
             return []
 
-    # Filtra la salida del modelo y devuelve solo detecciones por encima del umbral
-    def _procesar_salida(self, salida: np.ndarray) -> list:
+    # Filtra la salida del modelo y devuelve solo detecciones por encima del umbral.
+    # Las coordenadas se devuelven en píxeles de la IMAGEN ORIGINAL (revierte el letterbox).
+    def _procesar_salida(self, salida: np.ndarray, escala: float = 1.0) -> list:
         detecciones = []
         salida = np.squeeze(salida)
         if salida.ndim == 1:
@@ -91,11 +105,13 @@ class VisionService:
 
             # Descarta detecciones débiles
             if confianza >= settings.confidence_threshold:
+                # Coordenadas en espacio 640 (letterbox) → divide por escala = px originales
                 x, y, w, h = fila[:4]
                 detecciones.append({
                     "clase":     self.clases[clase_id] if clase_id < len(self.clases) else str(clase_id),
                     "confianza": round(confianza, 4),
-                    "bbox":      [float(x), float(y), float(w), float(h)]
+                    "bbox":      [float(x) / escala, float(y) / escala,
+                                  float(w) / escala, float(h) / escala]
                 })
         return detecciones
 

@@ -4,10 +4,12 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from app.config import get_settings
 from app.routers import auth, usuario, dispositivo, camara, lectura, alerta, websocket, ubicacion, tipos, telegram
+from app.routers import vision as vision_router
 from app.services.mqtt_client import iniciar_mqtt, detener_mqtt
 from app.services.vision_service import vision
 from app.services.stream_service import iniciar_stream, detener_todos
 from app.services.limpieza_service import iniciar_limpieza, detener_limpieza
+from app.services.telegram_service import configurar_webhook
 from app.database.connection import execute_query
 from app.middleware.security import SecurityHeadersMiddleware
 import os
@@ -30,6 +32,16 @@ async def lifespan(app: FastAPI):
     for cam in camaras:
         print(f"Iniciando detección automática: {cam['nombre']}")
         iniciar_stream(cam["id"], cam["url_rtsp"])
+
+    # Registra el webhook de Telegram para que el bot reciba mensajes (/start, etc.)
+    # Usa WEBHOOK_BASE_URL si está definido; si no, el dominio público de Railway.
+    base_url = os.getenv("WEBHOOK_BASE_URL")
+    if not base_url and os.getenv("RAILWAY_PUBLIC_DOMAIN"):
+        base_url = f"https://{os.getenv('RAILWAY_PUBLIC_DOMAIN')}"
+    if base_url:
+        await configurar_webhook(base_url)
+    else:
+        print("WEBHOOK_BASE_URL/RAILWAY_PUBLIC_DOMAIN no definidos — webhook de Telegram NO registrado")
 
     yield
     # Detiene streams, MQTT y job de limpieza al cerrar el proceso
@@ -77,6 +89,7 @@ app.include_router(websocket.router)
 app.include_router(ubicacion.router)
 app.include_router(tipos.router)
 app.include_router(telegram.router)
+app.include_router(vision_router.router)
 
 # Sirve los videos generados por las detecciones
 os.makedirs("videos", exist_ok=True)

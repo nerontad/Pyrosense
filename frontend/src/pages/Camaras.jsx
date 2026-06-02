@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import PageShell from '../components/PageShell'
 import VideoPlayer from '../components/VideoPlayer'
+import DetectorLocal from '../components/DetectorLocal'
 import Modal from '../components/Modal'
 import api from '../services/api'
 
@@ -17,6 +18,7 @@ export default function Camaras() {
   const [form, setForm]                 = useState({ nombre: '', url_rtsp: '', ubicacion_id: '' })
   const [error, setError]               = useState('')
   const [guardando, setGuardando]       = useState(false)
+  const [demoAbierto, setDemoAbierto]   = useState(false)
 
   useEffect(() => { cargarDatos() }, [])
 
@@ -94,11 +96,27 @@ export default function Camaras() {
       title="Cámaras"
       subtitle="Vigilancia visual en vivo con detección automática de fuego"
       actions={(
-        <button onClick={() => abrirModal()} className="btn-ember">
-          <span className="text-base leading-none">+</span> Agregar cámara
-        </button>
+        <>
+          <button onClick={() => setDemoAbierto(v => !v)} className="btn-ghost">
+            🎥 {demoAbierto ? 'Ocultar demo' : 'Demo con mi cámara'}
+          </button>
+          <button onClick={() => abrirModal()} className="btn-ember">
+            <span className="text-base leading-none">+</span> Agregar cámara
+          </button>
+        </>
       )}
     >
+      {demoAbierto && (
+        <div className="mb-6">
+          <h2 className="text-white font-display font-semibold text-base mb-1">
+            Demo en vivo — cámara del dispositivo
+          </h2>
+          <p className="text-zinc-400 text-sm mb-3">
+            Usa la cámara de tu notebook o celular para probar la detección de fuego/humo en tiempo real.
+          </p>
+          <DetectorLocal />
+        </div>
+      )}
       {cargando ? (
         <SkeletonGrid/>
       ) : camaras.length === 0 ? (
