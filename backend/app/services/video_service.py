@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from app.config import get_settings
 from app.database.connection import execute_one
+from app.utils.crypto_rtsp import descifrar_url
 
 settings = get_settings()
 
@@ -19,7 +20,8 @@ def grabar_clip(camara_id: str) -> dict | None:
         print(f"Cámara {camara_id} no encontrada en BD")
         return None
 
-    url_rtsp = camara["url_rtsp"]
+    # La URL está cifrada en la BD; ffmpeg necesita la original en claro
+    url_rtsp = descifrar_url(camara["url_rtsp"])
     duracion_seg = settings.buffer_seconds
     # Nombre con timestamp para no sobrescribir
     nombre_archivo = f"alerta_{camara_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"

@@ -29,9 +29,11 @@ async def lifespan(app: FastAPI):
         "SELECT id, url_rtsp, nombre FROM camaras WHERE activo = 1",
         fetch=True
     )
+    
+    from app.utils.crypto_rtsp import descifrar_url
     for cam in camaras:
         print(f"Iniciando detección automática: {cam['nombre']}")
-        iniciar_stream(cam["id"], cam["url_rtsp"])
+        iniciar_stream(cam["id"], descifrar_url(cam["url_rtsp"]))
 
     # Registra el webhook de Telegram para que el bot reciba mensajes (/start, etc.)
     # Usa WEBHOOK_BASE_URL si está definido; si no, el dominio público de Railway.
