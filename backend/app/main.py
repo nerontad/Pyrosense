@@ -66,6 +66,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 ORIGENES_PERMITIDOS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://pyrosense.vercel.app",
     "https://proyecto-de-titulo-pearl.vercel.app",
 ]
 
