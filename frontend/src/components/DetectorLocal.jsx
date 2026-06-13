@@ -7,6 +7,9 @@ const INTERVALO_MS = 700
 // Ancho máximo del frame que se manda al backend (menos peso = más rápido).
 const ANCHO_ENVIO = 480
 
+// Colores de las cajas de detección (paleta del sistema)
+const COLOR_DETECCION = { fire: '#FF4D00', smoke: '#E0A458' }
+
 // Demo: usa la cámara del notebook/celular y dibuja en vivo las detecciones
 // de fuego/humo que devuelve el modelo YOLO del backend.
 export default function DetectorLocal() {
@@ -87,19 +90,19 @@ export default function DetectorLocal() {
           const y = d.y * canvas.height
           const w = d.w * canvas.width
           const h = d.h * canvas.height
-          const color = d.clase === 'fire' ? '#ef4444' : '#f59e0b'
+          const color = COLOR_DETECCION[d.clase] || COLOR_DETECCION.smoke
 
           ctx.lineWidth = Math.max(2, canvas.width / 320)
           ctx.strokeStyle = color
           ctx.strokeRect(x, y, w, h)
 
           const etiqueta = `${d.clase} ${Math.round(d.confianza * 100)}%`
-          ctx.font = `${Math.max(14, canvas.width / 40)}px sans-serif`
+          ctx.font = `${Math.max(14, canvas.width / 40)}px "JetBrains Mono", monospace`
           const tw = ctx.measureText(etiqueta).width
           const th = Math.max(18, canvas.width / 30)
           ctx.fillStyle = color
           ctx.fillRect(x, Math.max(0, y - th), tw + 10, th)
-          ctx.fillStyle = '#fff'
+          ctx.fillStyle = '#0E0C0A'
           ctx.fillText(etiqueta, x + 5, Math.max(th - 5, y - 5))
         }
       }
@@ -147,46 +150,57 @@ export default function DetectorLocal() {
   const hayFuego = detecciones.some(d => d.clase === 'fire')
 
   return (
-    <div className="panel overflow-hidden">
-      <div className="relative bg-black aspect-video">
+    <div className="mod">
+      <div className="relative bg-char-950 aspect-video">
         <video ref={videoRef} className="hidden" muted playsInline />
         <canvas ref={canvasRef} className="w-full h-full object-contain" />
 
         {!activo && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-300">
-            <span className="text-3xl mb-2">🎥</span>
-            <p className="text-sm font-medium">Cámara del dispositivo</p>
-            <p className="text-xs text-zinc-500">Inicia la demo para detectar fuego/humo en vivo</p>
+          <div className="absolute inset-0 flex flex-col items-start justify-end p-6 sm:p-8">
+            <p className="kicker">Demo local</p>
+            <p className="font-display type-expanded font-bold uppercase text-bone text-lg mt-3">
+              Cámara del dispositivo
+            </p>
+            <p className="font-mono text-[11px] text-ash-400 mt-2 tracking-wide">
+              // Inicia la demo para detectar fuego y humo en vivo
+            </p>
           </div>
         )}
 
         {activo && (
           <div className="pointer-events-none absolute top-3 left-3">
-            <span className={`px-2 py-1 rounded-md text-[10px] font-bold tracking-wider
-                              backdrop-blur-md flex items-center gap-1.5
-                              ${hayFuego ? 'bg-red-600/90 text-white' : 'bg-emerald-600/80 text-white'}`}>
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse-soft"/>
-              {hayFuego ? '🔥 FUEGO DETECTADO' : 'ANALIZANDO'}
+            <span className={`flex items-center gap-2 px-2 py-1 font-mono text-[11px]
+                              font-semibold tracking-[0.2em] uppercase
+                              ${hayFuego
+                                ? 'bg-ember-500 text-char-950'
+                                : 'bg-char-950/80 border border-moss-500/60 text-moss-300'}`}>
+              <span className={`dot animate-blink ${hayFuego ? 'bg-char-950' : 'bg-moss-400'}`}/>
+              {hayFuego ? 'Fuego detectado' : 'Analizando'}
             </span>
           </div>
         )}
       </div>
 
-      <div className="p-4 sm:p-5 flex flex-wrap items-center gap-2">
+      <div className="p-5 sm:p-6 border-t border-line flex flex-wrap items-center gap-3">
         {!activo ? (
-          <button onClick={iniciar} className="btn-ember">▶ Iniciar demo</button>
+          <button onClick={iniciar} className="btn-fire">▶ Iniciar demo</button>
         ) : (
-          <button onClick={detener} className="btn-ghost">■ Detener</button>
+          <button onClick={detener} className="btn-burn">■ Detener</button>
         )}
-        <button onClick={cambiarCamara} className="btn-ghost">
-          🔄 {facingMode === 'environment' ? 'Usar frontal' : 'Usar trasera'}
+        <button onClick={cambiarCamara} className="btn-line">
+          {facingMode === 'environment' ? 'Usar frontal' : 'Usar trasera'}
         </button>
         {activo && (
-          <span className="text-xs text-zinc-500 ml-auto">
+          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ash-400 ml-auto">
             {detecciones.length} detección(es)
           </span>
         )}
-        {error && <p className="w-full text-red-400 text-sm">{error}</p>}
+        {error && (
+          <p className="w-full err-banner">
+            <span>ERR //</span>
+            <span>{error}</span>
+          </p>
+        )}
       </div>
     </div>
   )

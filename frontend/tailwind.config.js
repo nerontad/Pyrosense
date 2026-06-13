@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
-// Tokens visuales personalizados de la app
+// Tokens del sistema visual "estación de vigilancia": carbón cálido, ceniza, hueso,
+// brasa como luz emisiva y musgo para "sistema sano"
 export default {
   content: [
     "./index.html",
@@ -7,88 +8,109 @@ export default {
   ],
   theme: {
     extend: {
-      // Tipografías
+      // Tipografías: Archivo (display expandido), Inter (cuerpo), JetBrains Mono (telemetría)
       fontFamily: {
         sans: ['"Inter"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['"Space Grotesk"', '"Inter"', 'sans-serif'],
+        display: ['"Archivo"', '"Inter"', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
-      // Paleta de colores de la marca (azul-noche + naranja-fuego)
+      // Paleta: negro carbón con temperatura (subtono quemado), neutros ceniza,
+      // hueso para texto, brasa para acción/peligro, flare para humo, musgo para OK
       colors: {
-        ink: {
-          950: '#070a14',
-          900: '#0b1020',
-          850: '#0f1530',
-          800: '#141a36',
-          700: '#1c2348',
-          600: '#272f5c',
+        char: {
+          950: '#0B0805',
+          900: '#0F0B07',
+          850: '#16100A',
+          800: '#1D150C',
+          700: '#2B1E10',
+        },
+        bone: '#F4EDDF',
+        ash: {
+          300: '#CCC1B2',
+          400: '#ADA193',
+          500: '#8D8173',
+          600: '#6B6055',
         },
         ember: {
-          50:  '#fff5ee',
-          100: '#ffe6d2',
-          200: '#ffc59c',
-          300: '#ff9d61',
-          400: '#ff7a36',
-          500: '#ff5b14',
-          600: '#ed3f00',
-          700: '#c12f02',
-          800: '#992708',
-          900: '#7c220a',
+          200: '#FFB088',
+          300: '#FF8A50',
+          400: '#FF6A26',
+          500: '#FF4D00',
+          600: '#D63E00',
+          700: '#A93200',
         },
+        moss: {
+          300: '#BAC49A',
+          400: '#97A567',
+          500: '#76863F',
+        },
+        flare: {
+          300: '#EFC183',
+          400: '#E0A458',
+          500: '#C98A2E',
+        },
+        // Hairlines cálidas: la estructura del sistema es la línea
+        line: 'rgba(244, 237, 223, 0.16)',
+        'line-strong': 'rgba(244, 237, 223, 0.36)',
+        'line-ember': 'rgba(255, 77, 0, 0.4)',
       },
-      // Fondos con gradientes y patrones
-      backgroundImage: {
-        'grid-faint': "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)",
-        'radial-ember': "radial-gradient(circle at 20% 0%, rgba(255,91,20,0.18), transparent 55%), radial-gradient(circle at 100% 100%, rgba(239,68,68,0.12), transparent 50%)",
-        'gradient-ember': "linear-gradient(135deg, #ff7a36 0%, #ed3f00 60%, #b91c1c 100%)",
+      letterSpacing: {
+        mega: '0.35em',
       },
-      // Sombras: efecto fuego y glassmorphism
+      // Easings con carácter (los nativos son débiles)
+      transitionTimingFunction: {
+        'out-strong': 'cubic-bezier(0.23, 1, 0.32, 1)',
+        'in-out-strong': 'cubic-bezier(0.77, 0, 0.175, 1)',
+      },
+      // Luz emisiva: la única sombra permitida es el resplandor de la brasa
       boxShadow: {
-        'ember':       '0 10px 40px -10px rgba(255,91,20,0.55), 0 0 0 1px rgba(255,91,20,0.25) inset',
-        'ember-soft':  '0 8px 30px -10px rgba(255,91,20,0.35)',
-        'glass':       '0 8px 32px 0 rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06) inset',
-        'glass-lg':    '0 20px 60px -10px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08) inset',
+        'ember-glow': '0 0 32px -6px rgba(255, 77, 0, 0.45)',
+        'ember-glow-lg': '0 0 60px -10px rgba(255, 77, 0, 0.55)',
+        'moss-glow': '0 0 24px -6px rgba(151, 165, 103, 0.35)',
       },
-      // Animaciones reutilizables
+      backgroundImage: {
+        // Gradiente de fuego para botones y acentos
+        'fire-grad': 'linear-gradient(135deg, #FF6A26 0%, #FF4D00 55%, #D63E00 100%)',
+        // Lavado de calor para módulos destacados
+        'heat-wash': 'radial-gradient(120% 90% at 85% 0%, rgba(255,77,0,0.17), transparent 60%)',
+        'moss-wash': 'radial-gradient(120% 90% at 85% 0%, rgba(151,165,103,0.14), transparent 60%)',
+      },
+      // Animaciones: parpadeo tipo cursor, entradas con easing fuerte, shimmer de carga
       animation: {
-        'pulse-soft':   'pulseSoft 2.4s ease-in-out infinite',
-        'flicker':      'flicker 3s ease-in-out infinite',
-        'float-slow':   'floatSlow 9s ease-in-out infinite',
-        'shimmer':      'shimmer 2.2s linear infinite',
-        'glow-pulse':   'glowPulse 2.8s ease-in-out infinite',
-        'fade-in-up':   'fadeInUp .5s ease-out both',
+        'blink':    'blink 1.2s steps(1) infinite',
+        'fade-up':  'fadeUp .5s cubic-bezier(0.23, 1, 0.32, 1) both',
+        'rise':     'rise .6s cubic-bezier(0.23, 1, 0.32, 1) both',
+        'shimmer':  'shimmer 2.2s linear infinite',
+        'flicker':  'flicker 3.2s ease-in-out infinite',
+        'breathe':  'breathe 3s ease-in-out infinite',
       },
-      // Definición de cada animación
       keyframes: {
-        pulseSoft: {
-          '0%,100%': { opacity: 1 },
-          '50%':     { opacity: 0.55 },
+        blink: {
+          '0%, 60%': { opacity: 1 },
+          '61%, 100%': { opacity: 0.15 },
         },
-        flicker: {
-          '0%,100%': { opacity: 0.95, transform: 'translateY(0)' },
-          '20%':     { opacity: 0.7,  transform: 'translateY(-1px)' },
-          '50%':     { opacity: 1,    transform: 'translateY(1px)' },
-          '70%':     { opacity: 0.85, transform: 'translateY(0)' },
+        fadeUp: {
+          '0%':   { opacity: 0, transform: 'translateY(8px)' },
+          '100%': { opacity: 1, transform: 'translateY(0)' },
         },
-        floatSlow: {
-          '0%,100%': { transform: 'translateY(0) translateX(0)' },
-          '50%':     { transform: 'translateY(-12px) translateX(6px)' },
+        rise: {
+          '0%':   { opacity: 0, transform: 'translateY(16px)' },
+          '100%': { opacity: 1, transform: 'translateY(0)' },
         },
         shimmer: {
           '0%':   { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
         },
-        glowPulse: {
-          '0%,100%': { boxShadow: '0 0 0 0 rgba(255,91,20,0.45)' },
-          '50%':     { boxShadow: '0 0 0 14px rgba(255,91,20,0)' },
+        flicker: {
+          '0%, 100%': { opacity: 1 },
+          '42%':      { opacity: 0.82 },
+          '58%':      { opacity: 0.94 },
+          '72%':      { opacity: 0.78 },
         },
-        fadeInUp: {
-          '0%':   { opacity: 0, transform: 'translateY(8px)' },
-          '100%': { opacity: 1, transform: 'translateY(0)' },
+        breathe: {
+          '0%, 100%': { boxShadow: '0 0 24px -8px rgba(255,77,0,0.35)' },
+          '50%':      { boxShadow: '0 0 44px -8px rgba(255,77,0,0.6)' },
         },
-      },
-      backdropBlur: {
-        xs: '2px',
       },
     },
   },

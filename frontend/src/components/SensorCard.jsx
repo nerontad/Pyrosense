@@ -1,98 +1,73 @@
-// Paletas y rangos válidos por tipo de sensor
-const PALETAS = {
-  naranja: {
-    text:  'text-ember-300',
-    glow:  'from-ember-500/30 to-ember-700/0',
-    ring:  'stroke-ember-400',
-    track: 'stroke-ember-500/15',
-    badge: 'bg-ember-500/15 border-ember-500/30 text-ember-300',
-    range: { min: 0, max: 60 },
-  },
-  azul: {
-    text:  'text-sky-300',
-    glow:  'from-sky-500/30 to-sky-700/0',
-    ring:  'stroke-sky-400',
-    track: 'stroke-sky-500/15',
-    badge: 'bg-sky-500/15 border-sky-500/30 text-sky-300',
-    range: { min: 0, max: 100 },
-  },
-  verde: {
-    text:  'text-emerald-300',
-    glow:  'from-emerald-500/25 to-emerald-700/0',
-    ring:  'stroke-emerald-400',
-    track: 'stroke-emerald-500/15',
-    badge: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300',
-    range: { min: 0, max: 2000 },
-  },
-  rojo: {
-    text:  'text-red-300',
-    glow:  'from-red-500/30 to-red-700/0',
-    ring:  'stroke-red-400',
-    track: 'stroke-red-500/15',
-    badge: 'bg-red-500/15 border-red-500/30 text-red-300',
-    range: { min: 0, max: 100 },
-  },
+// Series por tipo de sensor: color del medidor/valor y rango válido
+const SERIES = {
+  naranja: { color: '#FF6A26', text: 'text-ember-300', etiqueta: 'Térmico',      range: { min: 0, max: 60 } },
+  azul:    { color: '#E0A458', text: 'text-flare-300', etiqueta: 'Hidrométrico', range: { min: 0, max: 100 } },
+  verde:   { color: '#97A567', text: 'text-moss-300',  etiqueta: 'Calidad aire', range: { min: 0, max: 2000 } },
+  rojo:    { color: '#FF4D00', text: 'text-ember-400', etiqueta: 'Crítico',      range: { min: 0, max: 100 } },
 }
 
-// Tarjeta de lectura de un sensor con anillo de progreso
-export default function SensorCard({ titulo, valor, unidad, icono, color = 'azul', estado = 'live' }) {
-  const p = PALETAS[color] || PALETAS.azul
+// Celda de lectura de un sensor: numeral display + medidor lineal sobre el rango
+export default function SensorCard({ titulo, valor, unidad, color = 'azul', estado = 'live' }) {
+  const s = SERIES[color] || SERIES.azul
   const v = (valor !== null && valor !== undefined) ? Number(valor) : null
-  // Calcula el porcentaje del valor dentro del rango [min, max]
+  // Posición del valor dentro del rango [min, max]
   const pct = v !== null
-    ? Math.max(0, Math.min(1, (v - p.range.min) / (p.range.max - p.range.min)))
+    ? Math.max(0, Math.min(1, (v - s.range.min) / (s.range.max - s.range.min)))
     : 0
 
-  // Cálculo del anillo SVG (radio, perímetro y offset del trazo)
-  const R = 28
-  const C = 2 * Math.PI * R
-  const offset = C * (1 - pct)
-
   return (
-    <div className="group relative overflow-hidden panel panel-hover p-5">
-      {/* glow */}
-      <div className={`pointer-events-none absolute -top-16 -right-16 w-40 h-40 rounded-full
-                       bg-gradient-radial blur-2xl opacity-70 bg-gradient-to-br ${p.glow}`}/>
-      <div className="absolute inset-0 bg-grid opacity-[0.04]"/>
+    <div
+      className="group bg-char-850 p-6 sm:p-7 transition-colors duration-200 hover:bg-char-800"
+      style={{ boxShadow: `inset 0 2px 0 0 ${s.color}59` }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <p className="kicker">{titulo}</p>
+        {estado === 'live' && v !== null && (
+          <span className="flex items-center gap-1.5 font-mono text-[11px] uppercase
+                           tracking-[0.2em] text-moss-300">
+            <span className="dot bg-moss-400 animate-blink"/>
+            Vivo
+          </span>
+        )}
+      </div>
 
-      <div className="relative flex items-start justify-between">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 font-medium">
-            {titulo}
-          </p>
-          <div className="flex items-baseline gap-1.5 mt-2">
-            <span className="text-4xl font-display font-bold text-white tabular-nums">
-              {v !== null ? v.toFixed(1) : '—'}
-            </span>
-            <span className="text-zinc-400 text-sm">{unidad}</span>
-          </div>
-          <div className="flex items-center gap-2 mt-3">
-            <span className={`chip ${p.badge}`}>{icono} {color === 'naranja' ? 'Térmico' : color === 'azul' ? 'Hidro' : 'Calidad aire'}</span>
-            {estado === 'live' && v !== null && (
-              <span className="text-[11px] text-zinc-500 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-soft"/>
-                live
-              </span>
-            )}
-          </div>
-        </div>
+      <div className="flex items-baseline gap-2 mt-5">
+        <span className={`num-display text-4xl ${v !== null ? s.text : 'text-ash-500'}`}>
+          {v !== null ? v.toFixed(1) : '——'}
+        </span>
+        <span className="font-mono text-[13px] text-ash-300">{unidad}</span>
+      </div>
 
-        {/* Anillo circular SVG con el avance del valor */}
-        <div className="relative">
-          <svg width="72" height="72" viewBox="0 0 72 72" className="-rotate-90">
-            <circle cx="36" cy="36" r={R} className={p.track} fill="none" strokeWidth="6" strokeLinecap="round"/>
-            <circle
-              cx="36" cy="36" r={R}
-              className={`${p.ring} transition-[stroke-dashoffset] duration-700 ease-out`}
-              fill="none" strokeWidth="6" strokeLinecap="round"
-              strokeDasharray={C}
-              strokeDashoffset={offset}
-              style={{ filter: 'drop-shadow(0 0 6px currentColor)' }}
+      {/* Medidor lineal: posición del valor sobre el rango del sensor */}
+      <div className="mt-7">
+        <div className="relative h-px bg-line">
+          <span
+            className="absolute left-0 top-1/2 -translate-y-1/2 h-[3px]
+                       transition-[width] duration-700 ease-out-strong"
+            style={{
+              width: `${pct * 100}%`,
+              background: `linear-gradient(90deg, transparent, ${s.color})`,
+            }}
+          />
+          {/* Punta luminosa del medidor */}
+          {v !== null && (
+            <span
+              className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5
+                         transition-[left] duration-700 ease-out-strong"
+              style={{
+                left: `calc(${pct * 100}% - 3px)`,
+                background: s.color,
+                boxShadow: `0 0 10px ${s.color}`,
+              }}
             />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center text-xl">
-            {icono}
-          </div>
+          )}
+        </div>
+        <div className="flex items-baseline justify-between mt-2.5 font-mono text-[11px] text-ash-400">
+          <span>{s.range.min}</span>
+          <span className="uppercase tracking-[0.2em] text-ash-500 group-hover:text-ash-300 transition-colors duration-200">
+            {s.etiqueta}
+          </span>
+          <span>{s.range.max}</span>
         </div>
       </div>
     </div>

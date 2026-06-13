@@ -109,101 +109,85 @@ export default function Dispositivos() {
 
   return (
     <PageShell
-      title="Dispositivos IoT"
+      index="04"
+      title="Red IoT"
       subtitle="Gestiona sensores y ubicaciones de tu red"
-      max="max-w-5xl"
       actions={(
         tabActiva === 'dispositivos'
-          ? <button onClick={abrirModalDisp} className="btn-ember">+ Agregar dispositivo</button>
-          : <button onClick={abrirModalUbi}  className="btn-ember">+ Agregar ubicación</button>
+          ? <button onClick={abrirModalDisp} className="btn-fire">+ Agregar dispositivo</button>
+          : <button onClick={abrirModalUbi}  className="btn-fire">+ Agregar ubicación</button>
       )}
     >
-      {/* Tabs */}
-      <div className="flex p-1 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-6 w-fit">
+      {/* Tabs con subrayado */}
+      <div className="flex gap-1 border-b border-line mb-10">
         <TabBtn active={tabActiva === 'dispositivos'} onClick={() => setTabActiva('dispositivos')}>
-          📡 Dispositivos
-          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-md bg-white/[0.06]">
-            {dispositivos.length}
-          </span>
+          Dispositivos
+          <span className="ml-3 text-ash-500 tabular-nums">{dispositivos.length}</span>
         </TabBtn>
         <TabBtn active={tabActiva === 'ubicaciones'} onClick={() => setTabActiva('ubicaciones')}>
-          📍 Ubicaciones
-          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-md bg-white/[0.06]">
-            {ubicaciones.length}
-          </span>
+          Ubicaciones
+          <span className="ml-3 text-ash-500 tabular-nums">{ubicaciones.length}</span>
         </TabBtn>
       </div>
 
       {cargando ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {[1,2,3].map(i => (
-            <div key={i} className="panel p-5 h-44 animate-shimmer shimmer-bg"/>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line border border-line">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="bg-char-850 h-44 shimmer-bg animate-shimmer"/>
           ))}
         </div>
       ) : tabActiva === 'dispositivos' ? (
         dispositivos.length === 0 ? (
-          <Empty title="Sin dispositivos registrados" desc="Agrega tu primer sensor IoT"
-                 icon="📡" cta="+ Agregar primer dispositivo" onClick={abrirModalDisp}/>
+          <Empty title="Ningún nodo en la red"
+                 desc="Registra tu primer sensor IoT para empezar a recibir telemetría."
+                 kicker="Red sin nodos"
+                 cta="+ Agregar primer dispositivo" onClick={abrirModalDisp}/>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {dispositivos.map(disp => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line border border-line stagger">
+            {dispositivos.map((disp, i) => {
               const ubi = ubicaciones.find(u => u.id === disp.ubicacion_id)
               return (
                 <article key={disp.id}
-                  className="panel panel-hover p-5 relative overflow-hidden animate-fade-in-up">
-                  <div className={`absolute -top-12 -right-12 w-32 h-32 rounded-full blur-2xl
-                                   ${disp.activo
-                                     ? 'bg-gradient-to-br from-emerald-500/20 to-transparent'
-                                     : 'bg-gradient-to-br from-zinc-500/10 to-transparent'}`}/>
-                  <div className="relative">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <span className="flex items-center justify-center w-11 h-11 rounded-xl
-                                         bg-gradient-to-br from-ember-500/20 to-red-500/10
-                                         border border-ember-500/30 text-xl">
-                          📡
-                        </span>
-                        <div>
-                          <h3 className="text-white font-display font-semibold tracking-tight">
-                            {disp.nombre}
-                          </h3>
-                          <p className="text-xs text-zinc-500">📍 {ubi?.nombre || 'Sin ubicación'}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className={disp.activo ? 'chip-ok' : 'chip-mute'}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${
-                            disp.activo ? 'bg-emerald-400 animate-pulse-soft' : 'bg-zinc-500'
-                          }`}/>
-                          {disp.activo ? 'Activo' : 'Inactivo'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1.5 mt-3">
-                      <span className="chip-ember">🌡️ Temp.</span>
-                      <span className="chip-info">💧 Humedad</span>
-                      <span className="chip-ok">💨 CO₂</span>
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between">
-                      <p className="text-[10px] text-zinc-600 font-mono truncate max-w-[60%]">
-                        {disp.id}
+                  className="group bg-char-850 p-6 sm:p-7 transition-colors duration-200
+                             hover:bg-char-800">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="font-mono text-[11px] text-ember-400">
+                        N{String(i + 1).padStart(2, '0')}
                       </p>
-                      <div className="flex gap-2">
-                        <button onClick={() => toggleDisp(disp)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition
-                                      ${disp.activo
-                                        ? 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08]'
-                                        : 'bg-gradient-ember text-white hover:brightness-110'}`}>
-                          {disp.activo ? 'Desactivar' : 'Activar'}
-                        </button>
-                        <button onClick={() => eliminarDisp(disp.id)}
-                          className="p-1.5 rounded-lg text-zinc-400 hover:text-red-300 hover:bg-red-500/10 transition"
-                          title="Eliminar">
-                          <IconTrash/>
-                        </button>
-                      </div>
+                      <h3 className="font-display type-expanded font-bold uppercase tracking-wide
+                                     text-bone text-base mt-2 truncate">
+                        {disp.nombre}
+                      </h3>
+                      <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-ash-500 mt-1.5 truncate">
+                        ↳ {ubi?.nombre || 'Sin ubicación'}
+                      </p>
+                    </div>
+                    <span className={`tag shrink-0 ${disp.activo ? 'tag-moss' : 'tag-mute'}`}>
+                      <span className={`dot ${disp.activo ? 'bg-moss-400 animate-blink' : 'bg-ash-600'}`}/>
+                      {disp.activo ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mt-6">
+                    <span className="tag tag-ember">Temp</span>
+                    <span className="tag tag-flare">Humedad</span>
+                    <span className="tag tag-moss">CO₂ / Gas</span>
+                  </div>
+
+                  <div className="mt-7 pt-4 border-t border-line flex items-center justify-between gap-4">
+                    <p className="font-mono text-[11px] text-ash-500 truncate">
+                      {disp.id}
+                    </p>
+                    <div className="flex items-center gap-5 shrink-0">
+                      <button onClick={() => toggleDisp(disp)}
+                        className={`btn-bare link-grow ${disp.activo ? '' : 'text-moss-300 hover:text-moss-300'}`}>
+                        {disp.activo ? 'Desactivar' : 'Activar'}
+                      </button>
+                      <button onClick={() => eliminarDisp(disp.id)}
+                        className="btn-bare link-grow text-ash-500 hover:text-ember-400">
+                        Eliminar
+                      </button>
                     </div>
                   </div>
                 </article>
@@ -213,34 +197,35 @@ export default function Dispositivos() {
         )
       ) : (
         ubicaciones.length === 0 ? (
-          <Empty title="Sin ubicaciones registradas" desc="Crea ubicaciones para asignar dispositivos"
-                 icon="📍" cta="+ Agregar primera ubicación" onClick={abrirModalUbi}/>
+          <Empty title="Sin ubicaciones definidas"
+                 desc="Crea ubicaciones físicas para asignar tus dispositivos."
+                 kicker="Mapa vacío"
+                 cta="+ Agregar primera ubicación" onClick={abrirModalUbi}/>
         ) : (
-          <div className="space-y-3">
-            {ubicaciones.map(ubi => (
+          <div className="border border-line divide-y divide-line stagger">
+            {ubicaciones.map((ubi, i) => (
               <article key={ubi.id}
-                className="panel panel-hover p-4 flex items-center justify-between gap-4
-                           animate-fade-in-up">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="flex items-center justify-center w-10 h-10 rounded-xl
-                                   bg-sky-500/10 border border-sky-500/30 text-lg">
-                    📍
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="text-white font-display font-semibold tracking-tight truncate">
-                      {ubi.nombre}
-                    </h3>
-                    {ubi.descripcion && (
-                      <p className="text-zinc-400 text-sm mt-0.5 truncate">{ubi.descripcion}</p>
-                    )}
-                    <p className="text-zinc-600 text-[10px] font-mono mt-1">{ubi.id}</p>
-                  </div>
+                className="grid grid-cols-12 items-center gap-4 px-5 sm:px-6 py-5
+                           bg-char-850 hover:bg-char-800 transition-colors duration-200">
+                <span className="col-span-1 font-mono text-[11px] text-ember-400">
+                  U{String(i + 1).padStart(2, '0')}
+                </span>
+                <div className="col-span-9 sm:col-span-5 min-w-0">
+                  <h3 className="font-display type-expanded font-bold uppercase tracking-wide
+                                 text-bone text-sm truncate">
+                    {ubi.nombre}
+                  </h3>
+                  <p className="font-mono text-[11px] text-ash-500 mt-1 truncate">{ubi.id}</p>
                 </div>
-                <button onClick={() => eliminarUbi(ubi.id)}
-                  className="p-2 rounded-lg text-zinc-400 hover:text-red-300 hover:bg-red-500/10 transition shrink-0"
-                  title="Eliminar">
-                  <IconTrash/>
-                </button>
+                <p className="hidden sm:block sm:col-span-4 font-mono text-[12px] text-ash-400 truncate">
+                  {ubi.descripcion || '—'}
+                </p>
+                <div className="col-span-2 flex justify-end">
+                  <button onClick={() => eliminarUbi(ubi.id)}
+                    className="btn-bare link-grow text-ash-500 hover:text-ember-400">
+                    Eliminar
+                  </button>
+                </div>
               </article>
             ))}
           </div>
@@ -255,48 +240,50 @@ export default function Dispositivos() {
         subtitle="Incluye sensores de temperatura, humedad y CO₂/gas"
         footer={(
           <>
-            <button onClick={() => setModalDisp(false)} className="btn-ghost flex-1">Cancelar</button>
+            <button onClick={() => setModalDisp(false)} className="btn-line flex-1">Cancelar</button>
             <button onClick={guardarDispositivo} disabled={guardandoDisp || ubicaciones.length === 0}
-              className="btn-ember flex-1">
-              {guardandoDisp ? 'Guardando...' : 'Guardar'}
+              className="btn-fire flex-1">
+              {guardandoDisp ? 'Guardando…' : 'Guardar'}
             </button>
           </>
         )}
       >
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
-            <label className="label-base">Nombre del dispositivo</label>
+            <label className="label-tech">Nombre del dispositivo</label>
             <input type="text" value={formDisp.nombre}
               onChange={e => setFormDisp({ ...formDisp, nombre: e.target.value })}
-              className="input-base" placeholder="Ej: Sensor bodega norte"/>
+              className="input-tech" placeholder="Ej: Sensor bodega norte"/>
           </div>
           <div>
-            <label className="label-base">Ubicación</label>
+            <label className="label-tech">Ubicación</label>
             {ubicaciones.length === 0 ? (
-              <div className="bg-amber-500/10 border border-amber-500/30 text-amber-300
-                              rounded-xl px-3.5 py-3 text-sm">
-                ⚠ Crea primero una ubicación en la pestaña <strong>Ubicaciones</strong>.
+              <div className="border border-flare-500/60 text-flare-300 px-4 py-3 font-mono text-xs">
+                Crea primero una ubicación en la pestaña Ubicaciones.
               </div>
             ) : (
               <select value={formDisp.ubicacion_id}
                 onChange={e => setFormDisp({ ...formDisp, ubicacion_id: e.target.value })}
-                className="input-base">
+                className="input-tech">
                 <option value="">Selecciona una ubicación</option>
                 {ubicaciones.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
               </select>
             )}
           </div>
-          <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-3.5">
-            <p className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2">
-              Sensores incluidos
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              <span className="chip-ember">🌡️ Temperatura</span>
-              <span className="chip-info">💧 Humedad</span>
-              <span className="chip-ok">💨 CO₂ / Gas</span>
+          <div className="border border-line p-4">
+            <p className="kicker mb-3">Sensores incluidos</p>
+            <div className="flex flex-wrap gap-2">
+              <span className="tag tag-ember">Temperatura</span>
+              <span className="tag tag-mute">Humedad</span>
+              <span className="tag tag-moss">CO₂ / Gas</span>
             </div>
           </div>
-          {errorDisp && <p className="text-red-400 text-sm">{errorDisp}</p>}
+          {errorDisp && (
+            <p className="err-banner">
+              <span>ERR //</span>
+              <span>{errorDisp}</span>
+            </p>
+          )}
         </div>
       </Modal>
 
@@ -308,27 +295,32 @@ export default function Dispositivos() {
         subtitle="Espacio físico donde instalarás dispositivos"
         footer={(
           <>
-            <button onClick={() => setModalUbi(false)} className="btn-ghost flex-1">Cancelar</button>
-            <button onClick={guardarUbicacion} disabled={guardandoUbi} className="btn-ember flex-1">
-              {guardandoUbi ? 'Guardando...' : 'Guardar'}
+            <button onClick={() => setModalUbi(false)} className="btn-line flex-1">Cancelar</button>
+            <button onClick={guardarUbicacion} disabled={guardandoUbi} className="btn-fire flex-1">
+              {guardandoUbi ? 'Guardando…' : 'Guardar'}
             </button>
           </>
         )}
       >
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
-            <label className="label-base">Nombre</label>
+            <label className="label-tech">Nombre</label>
             <input type="text" value={formUbi.nombre}
               onChange={e => setFormUbi({ ...formUbi, nombre: e.target.value })}
-              className="input-base" placeholder="Ej: Bodega principal"/>
+              className="input-tech" placeholder="Ej: Bodega principal"/>
           </div>
           <div>
-            <label className="label-base">Descripción (opcional)</label>
+            <label className="label-tech">Descripción (opcional)</label>
             <input type="text" value={formUbi.descripcion}
               onChange={e => setFormUbi({ ...formUbi, descripcion: e.target.value })}
-              className="input-base" placeholder="Ej: Zona norte del edificio"/>
+              className="input-tech" placeholder="Ej: Zona norte del edificio"/>
           </div>
-          {errorUbi && <p className="text-red-400 text-sm">{errorUbi}</p>}
+          {errorUbi && (
+            <p className="err-banner">
+              <span>ERR //</span>
+              <span>{errorUbi}</span>
+            </p>
+          )}
         </div>
       </Modal>
     </PageShell>
@@ -338,35 +330,27 @@ export default function Dispositivos() {
 function TabBtn({ active, onClick, children }) {
   return (
     <button onClick={onClick}
-      className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center
+      className={`px-4 pb-3 -mb-px font-mono text-[11px] uppercase tracking-[0.18em]
+                  border-b-2 transition-colors duration-200
                   ${active
-                    ? 'bg-white/[0.08] text-white shadow-inner'
-                    : 'text-zinc-400 hover:text-white'}`}>
+                    ? 'text-bone border-ember-500'
+                    : 'text-ash-500 border-transparent hover:text-bone'}`}>
       {children}
     </button>
   )
 }
 
-function Empty({ title, desc, icon, cta, onClick }) {
+function Empty({ kicker, title, desc, cta, onClick }) {
   return (
-    <div className="panel py-16 text-center">
-      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl
-                      bg-gradient-to-br from-ember-500/20 to-red-500/10
-                      border border-ember-500/30 mb-4">
-        <span className="text-3xl">{icon}</span>
-      </div>
-      <h3 className="text-white font-display text-lg font-semibold">{title}</h3>
-      <p className="text-zinc-400 text-sm mt-1.5">{desc}</p>
-      <button onClick={onClick} className="btn-ember mt-5">{cta}</button>
+    <div className="relative border border-line p-8 sm:p-14 overflow-hidden">
+      <div className="absolute inset-0 bg-heat-wash pointer-events-none"/>
+      <p className="kicker relative">{kicker}</p>
+      <h3 className="relative font-display type-expanded font-black uppercase text-bone
+                     text-[clamp(1.5rem,3.4vw,2.4rem)] mt-5 max-w-lg leading-tight">
+        {title}
+      </h3>
+      <p className="relative font-mono text-[13px] text-ash-300 mt-5 max-w-md leading-relaxed">{desc}</p>
+      <button onClick={onClick} className="relative btn-fire mt-9">{cta}</button>
     </div>
-  )
-}
-
-function IconTrash() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-      <polyline points="3 6 5 6 21 6"/>
-      <path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-    </svg>
   )
 }

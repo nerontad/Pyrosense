@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Hls from 'hls.js'
 
-// Reproductor de stream HLS de cámara con overlay de estado
+// Reproductor de stream HLS de cámara con indicador de señal
 export default function VideoPlayer({ urlHls }) {
   const videoRef = useRef(null)
   // Estado del stream: cargando | live | error
@@ -29,7 +29,7 @@ export default function VideoPlayer({ urlHls }) {
   }, [urlHls])
 
   return (
-    <div className="relative bg-black aspect-video overflow-hidden">
+    <div className="relative bg-char-950 aspect-video overflow-hidden">
       <video
         ref={videoRef}
         className="w-full h-full object-contain"
@@ -38,32 +38,38 @@ export default function VideoPlayer({ urlHls }) {
         playsInline
       />
 
-      {/* Indicador de estado en la esquina */}
-      <div className="pointer-events-none absolute top-3 left-3 flex items-center gap-2">
-        <span className={`px-2 py-1 rounded-md text-[10px] font-bold tracking-wider
-                          backdrop-blur-md flex items-center gap-1.5
-                          ${estado === 'live'
-                            ? 'bg-red-600/80 text-white'
-                            : estado === 'error'
-                              ? 'bg-zinc-700/80 text-zinc-300'
-                              : 'bg-black/60 text-zinc-300'}`}>
-          {estado === 'live' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse-soft"/>}
-          {estado === 'live' ? 'LIVE' : estado === 'error' ? 'OFFLINE' : 'CARGANDO'}
-        </span>
+      {/* Indicador de señal */}
+      <div className="pointer-events-none absolute top-3 left-3">
+        {estado === 'live' ? (
+          <span className="flex items-center gap-2 bg-fire-grad text-char-950 shadow-ember-glow
+                           px-2 py-1 font-mono text-[11px] font-semibold tracking-[0.2em] uppercase">
+            <span className="dot bg-char-950 animate-blink"/>
+            Rec — Vivo
+          </span>
+        ) : (
+          <span className="flex items-center gap-2 bg-char-950/80 border border-line text-ash-300
+                           px-2 py-1 font-mono text-[11px] tracking-[0.2em] uppercase">
+            {estado === 'error' ? 'Sin señal' : 'Conectando'}
+          </span>
+        )}
       </div>
 
-      {/* Estado vacío / error */}
+      {/* Estado de error */}
       {estado === 'error' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center
-                        bg-gradient-to-b from-black/40 to-black/80 text-zinc-300">
-          <span className="text-3xl mb-2">📡</span>
-          <p className="text-sm font-medium">Sin señal</p>
-          <p className="text-xs text-zinc-500">El stream no está disponible</p>
+        <div className="absolute inset-0 flex flex-col items-start justify-end p-6 bg-char-950/70">
+          <p className="font-display type-expanded font-bold uppercase text-bone text-lg">
+            Sin señal
+          </p>
+          <p className="font-mono text-[11px] text-ash-400 mt-1 tracking-wide">
+            // El stream no está disponible
+          </p>
         </div>
       )}
       {estado === 'cargando' && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-          <span className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
+        <div className="absolute inset-0 flex items-center justify-center bg-char-950/60">
+          <span className="font-mono text-[11px] uppercase tracking-[0.3em] text-ash-400 animate-blink">
+            Estableciendo enlace…
+          </span>
         </div>
       )}
     </div>

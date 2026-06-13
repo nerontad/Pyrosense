@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-// Modal reutilizable con backdrop, soporte ESC y bloqueo de scroll
+// Modal reutilizable: panel afilado con regla brasa, soporte ESC y bloqueo de scroll
 export default function Modal({ open, onClose, title, subtitle, children, footer, size = 'md' }) {
   // Cierra con ESC y bloquea el scroll del body mientras está abierto
   useEffect(() => {
@@ -24,37 +24,42 @@ export default function Modal({ open, onClose, title, subtitle, children, footer
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4
-                    bg-ink-950/70 backdrop-blur-sm animate-fade-in-up"
+                    bg-char-950/85 animate-fade-up"
          onClick={onClose}>
       <div
-        className={`relative w-full ${sizeClass} panel shadow-glass-lg
-                    overflow-hidden`}
+        className={`relative w-full ${sizeClass} bg-char-850 border border-line animate-rise`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* hairline ember en el borde superior */}
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r
-                        from-transparent via-ember-500/60 to-transparent"/>
+        {/* Regla brasa superior */}
+        <div className="absolute inset-x-0 top-0 h-[3px] bg-fire-grad shadow-ember-glow"/>
 
-        <div className="px-6 pt-5 pb-4 border-b border-white/[0.06] flex items-start justify-between gap-3">
+        <div className="px-7 pt-7 pb-5 border-b border-line flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-white font-display font-semibold text-lg tracking-tight">{title}</h2>
-            {subtitle && <p className="text-zinc-400 text-sm mt-1">{subtitle}</p>}
+            <h2 className="font-display type-expanded font-bold uppercase tracking-wide
+                           text-bone text-lg leading-tight">
+              {title}
+            </h2>
+            {subtitle && (
+              <p className="font-mono text-[12px] text-ash-400 mt-2 tracking-wide">{subtitle}</p>
+            )}
           </div>
           <button onClick={onClose}
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition"
+            className="p-1.5 -mr-1.5 text-ash-400 hover:text-ember-400 transition-colors"
             aria-label="Cerrar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                 strokeLinecap="round" width="18" height="18">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+                 width="18" height="18">
               <line x1="18" y1="6" x2="6" y2="18"/>
               <line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
         </div>
-        <div className="px-6 py-5">
+
+        <div className="px-7 py-6">
           {children}
         </div>
+
         {footer && (
-          <div className="px-6 pb-5 pt-1 flex gap-3">
+          <div className="px-7 pb-7 pt-1 flex gap-3">
             {footer}
           </div>
         )}

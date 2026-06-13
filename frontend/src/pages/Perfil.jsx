@@ -59,110 +59,125 @@ export default function Perfil() {
   }
 
   return (
-    <PageShell title="Mi perfil" subtitle="Configura tus datos y notificaciones" max="max-w-3xl">
-      {/* Tarjeta perfil */}
-      <section className="panel overflow-hidden mb-6 relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-ember-500/20 via-transparent to-red-500/10 pointer-events-none"/>
-        <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-ember-500/15 blur-3xl pointer-events-none"/>
-        <div className="relative p-6 sm:p-7 flex flex-col sm:flex-row items-center sm:items-end gap-5">
-          <div className="relative">
-            <span className="flex items-center justify-center w-20 h-20 rounded-2xl
-                             bg-gradient-ember text-white font-display font-bold text-3xl
-                             shadow-ember">
-              {initial}
-            </span>
-            <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500
-                             border-2 border-ink-900"/>
-          </div>
-          <div className="flex-1 text-center sm:text-left">
-            <h2 className="font-display text-2xl font-bold text-white tracking-tight">
-              {usuario?.nombre || 'Usuario'}
-            </h2>
-            <p className="text-zinc-400 text-sm">{usuario?.email}</p>
-            <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
-              <span className="chip-ok">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-soft"/>
-                Sesión activa
-              </span>
-              {usuario?.telegram_chat_id
-                ? <span className="chip-info">📱 Telegram conectado</span>
-                : <span className="chip-mute">📱 Telegram no configurado</span>}
+    <PageShell
+      index="05"
+      title="Operador"
+      subtitle="Configura tus datos y canales de notificación"
+    >
+      {/* Split asimétrico: identidad 4 / ajustes 8.
+          En móvil el bloque de identidad se vuelve horizontal para no ocupar toda la pantalla. */}
+      <div className="grid grid-cols-12 gap-x-10 gap-y-12">
+        {/* Bloque de identidad */}
+        <aside className="col-span-12 lg:col-span-4">
+          <div className="border border-line animate-rise flex flex-row lg:flex-col">
+            <div className="relative w-28 sm:w-36 lg:w-full aspect-square shrink-0
+                            flex items-center justify-center
+                            border-r lg:border-r-0 lg:border-b border-line
+                            bg-char-850 overflow-hidden">
+              <div className="absolute inset-0 bg-heat-wash pointer-events-none"/>
+              <span className="relative num-display text-5xl sm:text-6xl lg:text-7xl
+                               text-fire glow-ember select-none">{initial}</span>
+            </div>
+            <div className="p-5 sm:p-6 lg:p-8 min-w-0 flex-1">
+              <h2 className="font-display type-expanded font-bold uppercase tracking-wide
+                             text-bone text-lg lg:text-xl leading-tight break-words">
+                {usuario?.nombre || 'Usuario'}
+              </h2>
+              <p className="font-mono text-[13px] text-ash-300 mt-2 lg:mt-3 break-all">
+                {usuario?.email}
+              </p>
+              <div className="flex flex-row flex-wrap lg:flex-col items-start gap-2 mt-4 lg:mt-7">
+                <span className="tag tag-moss">
+                  <span className="dot bg-moss-400 animate-blink"/>
+                  Sesión activa
+                </span>
+                {usuario?.telegram_chat_id
+                  ? <span className="tag tag-mute">Telegram enlazado</span>
+                  : <span className="tag tag-flare">Telegram sin configurar</span>}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </aside>
 
-      {/* Telegram */}
-      <Section
-        icon={<IconBell/>}
-        title="Notificaciones Telegram"
-        desc={<>Escríbele <strong className="text-white">/start</strong> a tu bot y pega el chat_id que recibas.</>}
-      >
-        <div className="flex flex-col sm:flex-row gap-3">
-          <input type="text" value={telegram}
-            onChange={e => setTelegram(e.target.value)}
-            placeholder="Ej: 7005485756"
-            className="input-base flex-1"/>
-          <button onClick={guardarTelegram} disabled={cargandoTelegram}
-            className="btn-ember sm:w-auto">
-            {cargandoTelegram ? 'Guardando...' : 'Guardar'}
-          </button>
-        </div>
-        <Mensaje msg={msgTelegram}/>
-      </Section>
+        {/* Ajustes */}
+        <div className="col-span-12 lg:col-span-8 space-y-16">
+          <Section
+            num="A"
+            title="Notificaciones Telegram"
+            desc={<>Escríbele <span className="text-bone">/start</span> a tu bot y pega el chat_id que recibas.</>}
+          >
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input type="text" value={telegram}
+                onChange={e => setTelegram(e.target.value)}
+                placeholder="Ej: 7005485756"
+                className="input-tech font-mono flex-1"/>
+              <button onClick={guardarTelegram} disabled={cargandoTelegram}
+                className="btn-fire sm:w-auto">
+                {cargandoTelegram ? 'Guardando…' : 'Guardar'}
+              </button>
+            </div>
+            <Mensaje msg={msgTelegram}/>
+          </Section>
 
-      {/* Cambiar contraseña */}
-      <Section
-        icon={<IconLock/>}
-        title="Cambiar contraseña"
-        desc="Recomendamos una contraseña fuerte y única."
-      >
-        <div className="space-y-3">
-          <div>
-            <label className="label-base">Contraseña actual</label>
-            <input type="password" value={passwords.actual}
-              onChange={e => setPasswords({ ...passwords, actual: e.target.value })}
-              className="input-base" placeholder="••••••••"/>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div>
-              <label className="label-base">Nueva contraseña</label>
-              <input type="password" value={passwords.nueva}
-                onChange={e => setPasswords({ ...passwords, nueva: e.target.value })}
-                className="input-base" placeholder="Mínimo 6 caracteres"/>
+          <Section
+            num="B"
+            title="Cambiar contraseña"
+            desc="Recomendamos una contraseña fuerte y única."
+          >
+            <div className="space-y-5">
+              <div>
+                <label className="label-tech">Contraseña actual</label>
+                <input type="password" value={passwords.actual}
+                  onChange={e => setPasswords({ ...passwords, actual: e.target.value })}
+                  className="input-tech" placeholder="••••••••"/>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="label-tech">Nueva contraseña</label>
+                  <input type="password" value={passwords.nueva}
+                    onChange={e => setPasswords({ ...passwords, nueva: e.target.value })}
+                    className="input-tech" placeholder="Mínimo 6 caracteres"/>
+                </div>
+                <div>
+                  <label className="label-tech">Confirmar</label>
+                  <input type="password" value={passwords.confirmar}
+                    onChange={e => setPasswords({ ...passwords, confirmar: e.target.value })}
+                    className="input-tech" placeholder="Repite la nueva contraseña"/>
+                </div>
+              </div>
+              <Mensaje msg={msgPassword}/>
+              <button onClick={guardarPassword} disabled={cargandoPassword}
+                className="btn-fire w-full">
+                {cargandoPassword ? 'Actualizando…' : 'Actualizar contraseña'}
+              </button>
             </div>
-            <div>
-              <label className="label-base">Confirmar</label>
-              <input type="password" value={passwords.confirmar}
-                onChange={e => setPasswords({ ...passwords, confirmar: e.target.value })}
-                className="input-base" placeholder="Repite la nueva contraseña"/>
-            </div>
-          </div>
-          <Mensaje msg={msgPassword}/>
-          <button onClick={guardarPassword} disabled={cargandoPassword}
-            className="btn-ember w-full mt-1">
-            {cargandoPassword ? 'Actualizando...' : 'Actualizar contraseña'}
-          </button>
+          </Section>
         </div>
-      </Section>
+      </div>
     </PageShell>
   )
 }
 
-// Bloque visual para cada sección del perfil
-function Section({ icon, title, desc, children }) {
+// Sección de ajustes con etiqueta montada sobre la regla
+function Section({ num, title, desc, children }) {
   return (
-    <section className="panel p-5 sm:p-6 mb-5">
-      <div className="flex items-start gap-3 mb-4">
-        <span className="flex items-center justify-center w-10 h-10 rounded-xl
-                         bg-ember-500/10 border border-ember-500/30 text-ember-300 shrink-0">
-          {icon}
-        </span>
-        <div>
-          <h3 className="text-white font-display font-semibold tracking-tight">{title}</h3>
-          {desc && <p className="text-zinc-400 text-sm mt-0.5">{desc}</p>}
+    <section>
+      <header className="border-t border-line">
+        <div className="-translate-y-1/2">
+          <h3 className="inline-flex items-baseline gap-4 bg-char-900 pr-5">
+            <span className="font-mono text-[11px] text-ember-500">{num}</span>
+            <span className="font-display type-expanded font-bold uppercase tracking-wide
+                             text-bone text-base">
+              {title}
+            </span>
+          </h3>
         </div>
-      </div>
+      </header>
+      {desc && (
+        <p className="font-mono text-[13px] text-ash-300 mb-6 tracking-wide leading-relaxed">
+          {desc}
+        </p>
+      )}
       {children}
     </section>
   )
@@ -173,29 +188,12 @@ function Mensaje({ msg }) {
   if (!msg.texto) return null
   const ok = msg.tipo === 'ok'
   return (
-    <div className={`flex items-start gap-2.5 mt-3 rounded-xl px-3.5 py-2.5 text-sm border
+    <div className={`flex items-start gap-3 mt-4 px-4 py-3 border font-mono text-[13px] animate-fade-up
                      ${ok
-                       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                       : 'bg-red-500/10 border-red-500/30 text-red-300'}`}>
-      <span className="text-base leading-none">{ok ? '✓' : '⚠'}</span>
+                       ? 'border-moss-500/60 text-moss-300'
+                       : 'border-ember-500/50 text-ember-300'}`}>
+      <span>{ok ? 'OK //' : 'ERR //'}</span>
       <span>{msg.texto}</span>
     </div>
-  )
-}
-
-function IconBell() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
-      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-    </svg>
-  )
-}
-function IconLock() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-      <rect x="3" y="11" width="18" height="11" rx="2"/>
-      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-    </svg>
   )
 }

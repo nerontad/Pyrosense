@@ -36,7 +36,7 @@ export default function Alertas() {
     }
   }, [datos])
 
-  // Conteos para los chips del resumen
+  // Conteos para la franja de resumen
   const stats = useMemo(() => {
     const total = alertas.length
     const pendientes = alertas.filter(a => !a.revisado).length
@@ -60,29 +60,32 @@ export default function Alertas() {
 
   return (
     <PageShell
+      index="03"
       title="Alertas"
       subtitle="Eventos detectados por visión artificial"
     >
-      {/* Resumen */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <ResumenChip label="Total"        value={stats.total}      icon="📊" tone="zinc"/>
-        <ResumenChip label="Pendientes"   value={stats.pendientes} icon="⏳" tone="amber"/>
-        <ResumenChip label="Incendio"     value={stats.incendio}   icon="🔥" tone="red"/>
-        <ResumenChip label="Humo"         value={stats.humo}       icon="💨" tone="orange"/>
+      {/* Franja de resumen con hairlines internas y acento por categoría */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-line border border-line mb-12 stagger">
+        <StatCell label="Total registradas" value={stats.total} tone="bone"/>
+        <StatCell label="Pendientes" value={stats.pendientes}
+                  tone={stats.pendientes > 0 ? 'ember' : 'mute'} pulso={stats.pendientes > 0}/>
+        <StatCell label="Incendio" value={stats.incendio} tone={stats.incendio > 0 ? 'ember' : 'mute'}/>
+        <StatCell label="Humo" value={stats.humo} tone={stats.humo > 0 ? 'flare' : 'mute'}/>
       </section>
 
-      {/* Filtros */}
-      <div className="flex p-1 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-5 w-fit">
+      {/* Filtros: tabs con subrayado */}
+      <div className="flex gap-1 border-b border-line mb-10">
         {[
           { k: 'todas',      l: 'Todas' },
           { k: 'pendientes', l: `Pendientes (${stats.pendientes})` },
           { k: 'revisadas',  l: 'Revisadas' },
         ].map(f => (
           <button key={f.k} onClick={() => setFiltro(f.k)}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition
+            className={`px-4 pb-3 -mb-px font-mono text-[11px] uppercase tracking-[0.18em]
+                        border-b-2 transition-colors duration-200
                         ${filtro === f.k
-                          ? 'bg-white/[0.08] text-white shadow-inner'
-                          : 'text-zinc-400 hover:text-white'}`}>
+                          ? 'text-bone border-ember-500'
+                          : 'text-ash-500 border-transparent hover:text-bone'}`}>
             {f.l}
           </button>
         ))}
@@ -91,66 +94,77 @@ export default function Alertas() {
       {cargando ? (
         <SkeletonList/>
       ) : visibles.length === 0 ? (
-        <div className="panel py-16 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl
-                          bg-emerald-500/15 border border-emerald-500/30 mb-4">
-            <span className="text-3xl">✅</span>
-          </div>
-          <p className="text-white font-display text-lg font-semibold">
-            {alertas.length === 0 ? 'Sin alertas registradas' : 'Sin alertas en este filtro'}
-          </p>
-          <p className="text-zinc-400 text-sm mt-1.5">
-            {alertas.length === 0 ? 'Tu sistema está vigilando.' : 'Cambia el filtro para ver más.'}
+        <div className="relative border border-line p-8 sm:p-14 overflow-hidden">
+          <div className="absolute inset-0 bg-moss-wash pointer-events-none"/>
+          <p className="kicker relative">{alertas.length === 0 ? 'Registro limpio' : 'Filtro sin resultados'}</p>
+          <h3 className="relative font-display type-expanded font-black uppercase text-bone
+                         text-[clamp(1.5rem,3.4vw,2.4rem)] mt-5 max-w-lg leading-tight">
+            {alertas.length === 0
+              ? <>Sin eventos <span className="text-moss-300">detectados</span></>
+              : 'Nada bajo este filtro'}
+          </h3>
+          <p className="relative font-mono text-[13px] text-ash-300 mt-5 leading-relaxed">
+            {alertas.length === 0
+              ? '// El sistema está vigilando. Las detecciones aparecerán aquí.'
+              : '// Cambia el filtro para ver más eventos.'}
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {visibles.map(alerta => (
-            <article key={alerta.id}
-              className={`panel panel-hover p-4 sm:p-5 relative animate-fade-in-up
-                          ${!alerta.revisado ? 'ring-1 ring-red-500/20' : ''}`}>
-              {/* franja lateral si pendiente */}
-              {!alerta.revisado && (
-                <span className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full
-                                 bg-gradient-to-b from-red-400 to-ember-500"/>
-              )}
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-center gap-3 flex-wrap">
+        // Libro mayor de eventos: filas con hairlines
+        <div className="border border-line divide-y divide-line stagger">
+          {visibles.map(alerta => {
+            const fecha = new Date(alerta.ocurrido_en)
+            return (
+              <article key={alerta.id}
+                className="group relative grid grid-cols-12 items-center gap-x-4 gap-y-3
+                           px-5 sm:px-6 py-5 bg-char-850 hover:bg-char-800
+                           transition-colors duration-200">
+                {/* Franja brasa si está pendiente */}
+                {!alerta.revisado && (
+                  <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-ember-500
+                                   shadow-[2px_0_14px_rgba(255,77,0,0.45)]"/>
+                )}
+
+                {/* Timestamp */}
+                <div className="col-span-6 sm:col-span-3 font-mono tabular-nums">
+                  <p className="text-bone text-sm">
+                    {fecha.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                  <p className="text-ash-500 text-[11px] uppercase tracking-[0.15em] mt-0.5">
+                    {fecha.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' })}
+                  </p>
+                </div>
+
+                {/* Tipo + confianza */}
+                <div className="col-span-6 sm:col-span-4">
                   <AlertaBadge
                     clase={alerta.tipo_id === 1 ? 'fire' : 'smoke'}
                     confianza={alerta.confianza}
                   />
-                  <div className="text-zinc-400 text-sm flex items-center gap-2">
-                    <IconClock/>
-                    {new Date(alerta.ocurrido_en).toLocaleString('es-CL', {
-                      day: '2-digit', month: 'short',
-                      hour: '2-digit', minute: '2-digit'
-                    })}
-                  </div>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
+
+                {/* Acciones */}
+                <div className="col-span-12 sm:col-span-5 flex items-center sm:justify-end gap-5">
                   {alerta.video && (
-                    <button
-                      onClick={() => setVerVideo(alerta)}
-                      className="btn-ghost px-3 py-1.5 text-xs"
-                    >
-                      <IconPlay/> Ver video
+                    <button onClick={() => setVerVideo(alerta)}
+                      className="btn-bare link-grow text-bone">
+                      Ver video →
                     </button>
                   )}
                   {!alerta.revisado ? (
                     <button onClick={() => marcarRevisada(alerta.id)}
-                      className="btn-ghost px-3 py-1.5 text-xs">
-                      <IconCheck/> Marcar revisada
+                      className="btn-bare link-grow hover:text-moss-300">
+                      Marcar revisada
                     </button>
                   ) : (
-                    <span className="chip-ok">
-                      <IconCheck small/> Revisada
+                    <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-moss-300">
+                      ✓ Revisada
                     </span>
                   )}
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            )
+          })}
         </div>
       )}
 
@@ -168,6 +182,7 @@ export default function Alertas() {
 // Modal con player de video para la alerta seleccionada
 function VideoModal({ alerta, onClose }) {
   const src = urlVideoAlerta(alerta.video?.ruta_archivo)
+  const esIncendio = alerta.tipo_id === 1
 
   // Cierre con tecla Escape
   useEffect(() => {
@@ -180,112 +195,97 @@ function VideoModal({ alerta, onClose }) {
     <div
       onClick={onClose}
       className="fixed inset-0 z-50 flex items-center justify-center
-                 bg-black/80 backdrop-blur-sm p-4 animate-fade-in-up"
+                 bg-char-950/85 p-4 animate-fade-up"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="panel max-w-3xl w-full p-4 sm:p-5"
+        className="relative bg-char-850 border border-line max-w-3xl w-full"
       >
-        <div className="flex items-center justify-between mb-3 gap-3">
+        <div className="absolute inset-x-0 top-0 h-[3px] bg-ember-500"/>
+
+        <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-line">
           <div>
-            <h3 className="text-white font-display font-semibold text-base">
-              {alerta.tipo_id === 1 ? '🔥 Incendio detectado' : '💨 Humo detectado'}
+            <h3 className="font-display type-expanded font-bold uppercase tracking-wide
+                           text-bone text-lg">
+              {esIncendio ? 'Incendio detectado' : 'Humo detectado'}
             </h3>
-            <p className="text-zinc-400 text-xs mt-0.5">
+            <p className="font-mono text-[12px] text-ash-400 mt-2 tracking-wide">
               {new Date(alerta.ocurrido_en).toLocaleString('es-CL', {
                 day: '2-digit', month: 'long', year: 'numeric',
                 hour: '2-digit', minute: '2-digit'
               })}
               {alerta.confianza != null && (
-                <> · Confianza: {(alerta.confianza * 100).toFixed(0)}%</>
+                <> · Confianza {(alerta.confianza * 100).toFixed(0)}%</>
               )}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="btn-ghost px-2.5 py-1.5 text-xs"
+            className="p-1.5 text-ash-400 hover:text-ember-400 transition-colors"
             aria-label="Cerrar"
           >
-            ✕
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+                 width="18" height="18">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
           </button>
         </div>
 
-        {src ? (
-          <video
-            src={src}
-            controls
-            autoPlay
-            className="w-full rounded-xl bg-black aspect-video"
-          />
-        ) : (
-          <div className="text-zinc-400 text-sm py-12 text-center">
-            No hay video disponible para esta alerta.
-          </div>
-        )}
+        <div className="p-6">
+          {src ? (
+            <video
+              src={src}
+              controls
+              autoPlay
+              className="w-full bg-char-950 aspect-video"
+            />
+          ) : (
+            <div className="font-mono text-[13px] text-ash-300 py-12 text-center">
+              // No hay video disponible para esta alerta
+            </div>
+          )}
 
-        {alerta.video?.ruta_archivo && (
-          <p className="text-zinc-500 text-[11px] font-mono mt-3 truncate">
-            {alerta.video.ruta_archivo}
-          </p>
-        )}
+          {alerta.video?.ruta_archivo && (
+            <p className="font-mono text-[11px] text-ash-500 mt-4 truncate">
+              {alerta.video.ruta_archivo}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
-function ResumenChip({ label, value, icon, tone }) {
+// Celda de la franja de resumen, con regla superior en el color de su categoría
+function StatCell({ label, value, tone = 'mute', pulso = false }) {
   const tones = {
-    zinc:   'from-white/[0.04] ring-white/10 text-white',
-    amber:  'from-amber-500/15 ring-amber-500/20 text-amber-300',
-    red:    'from-red-500/15 ring-red-500/20 text-red-300',
-    orange: 'from-ember-500/15 ring-ember-500/20 text-ember-300',
+    bone:  { bar: 'bg-bone/40',     num: 'text-bone' },
+    ember: { bar: 'bg-ember-500',   num: 'text-ember-400' },
+    flare: { bar: 'bg-flare-400',   num: 'text-flare-300' },
+    mute:  { bar: 'bg-ash-600/40',  num: 'text-ash-400' },
   }
+  const t = tones[tone] || tones.mute
   return (
-    <div className={`relative panel p-4 ring-1 ${tones[tone]?.split(' ').slice(1).join(' ')}`}>
-      <div className={`absolute inset-0 bg-gradient-to-br ${tones[tone]?.split(' ')[0]} to-transparent rounded-2xl pointer-events-none`}/>
-      <div className="relative flex items-center justify-between">
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">{label}</p>
-          <p className="font-display text-3xl font-bold text-white tabular-nums mt-0.5">{value}</p>
-        </div>
-        <span className="text-2xl opacity-80">{icon}</span>
-      </div>
+    <div className="relative bg-char-850 px-5 py-6 sm:px-7 transition-colors duration-200 hover:bg-char-800">
+      <span className={`absolute top-0 left-0 w-10 h-[3px] ${t.bar} ${pulso ? 'animate-blink' : ''}`}/>
+      <p className="kicker">{label}</p>
+      <p className={`num-display text-3xl sm:text-4xl mt-3 ${t.num} ${pulso ? 'glow-ember' : ''}`}>
+        {value}
+      </p>
     </div>
   )
 }
 
 function SkeletonList() {
   return (
-    <div className="space-y-3">
-      {[1,2,3].map(i => (
-        <div key={i} className="panel p-5">
-          <div className="h-4 w-1/3 bg-white/[0.06] rounded animate-shimmer shimmer-bg"/>
-          <div className="h-3 w-1/2 bg-white/[0.04] rounded mt-2 animate-shimmer shimmer-bg"/>
+    <div className="border border-line divide-y divide-line">
+      {[1, 2, 3].map(i => (
+        <div key={i} className="bg-char-850 px-6 py-5">
+          <div className="h-4 w-1/3 shimmer-bg animate-shimmer"/>
+          <div className="h-3 w-1/2 mt-2 shimmer-bg animate-shimmer"/>
         </div>
       ))}
     </div>
-  )
-}
-
-function IconClock() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9"/>
-      <polyline points="12 7 12 12 15 14"/>
-    </svg>
-  )
-}
-function IconPlay() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-      <polygon points="6,4 20,12 6,20"/>
-    </svg>
-  )
-}
-function IconCheck({ small }) {
-  return (
-    <svg width={small ? 12 : 14} height={small ? 12 : 14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12"/>
-    </svg>
   )
 }
