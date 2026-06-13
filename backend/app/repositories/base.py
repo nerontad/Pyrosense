@@ -25,6 +25,11 @@ class BaseRepository(ABC):
     def _query_one(self, sql: str, params: tuple = None) -> Optional[dict]:
         return execute_one(sql, params)
 
+    # Alias corto de _query_one (mantiene compatibilidad con los repositorios
+    # que ya usaban este nombre tras unificar la clase base).
+    def _one(self, sql: str, params: tuple = None) -> Optional[dict]:
+        return execute_one(sql, params)
+
     def obtener_por_id(self, entidad_id) -> Optional[dict]:
         return self._query_one(
             f"SELECT * FROM {self.tabla} WHERE id = %s",

@@ -3,8 +3,22 @@ import asyncio
 from app.config import get_settings
 from app.database.connection import execute_query, execute_one
 from app.services.video_service import grabar_clip
+from app.services.notificacion import (
+    Notificador,
+    AlertaPayload,
+    NotificacionTelegram,
+    NotificacionWebSocket,
+)
 
 settings = get_settings()
+
+# Notificador (patrón Strategy): centraliza el envío de alertas por todos los
+# canales. Agregar un canal nuevo (email, SMS, push) es solo crear otra
+# EstrategiaNotificacion y registrarla aquí — sin tocar el motor de alertas.
+_notificador = Notificador([
+    NotificacionWebSocket(),
+    NotificacionTelegram(),
+])
 
 # Última vez que se generó alerta para cada cámara
 _cooldown: dict = {}
@@ -51,7 +65,9 @@ def _guardar_video(alerta_id: str, datos_video: dict) -> str:
     )
     return video_id
 
-# Procesa las detecciones de un frame: guarda alerta, graba video, notifica
+# Procesa las detecciones de un frame: guarda alerta, graba video, notifica.
+# Todo va dentro de un try/except: un error aquí (p. ej. la cámara se eliminó
+# justo durante la alerta) NO debe matar el hilo de detección del stream.
 def procesar_deteccion(camara_id: str, detecciones: list):
     if not detecciones:
         return
@@ -72,65 +88,51 @@ def procesar_deteccion(camara_id: str, detecciones: list):
 
     _registrar_cooldown(camara_id)
 
-    # Persiste la alerta en la BD
-    alerta_id = _guardar_alerta(camara_id, tipo_id, confianza)
-    print(f"Alerta guardada: {alerta_id}")
-
-    # Avisa al frontend por WebSocket
-    notificar_alerta_ws(alerta_id, camara_id, clase, confianza)
-
-    # Graba un clip de los últimos segundos
-    datos_video = grabar_clip(camara_id)
-    if datos_video:
-        video_id = _guardar_video(alerta_id, datos_video)
-        print(f"Video guardado: {video_id}")
-
-        # Envía el video por Telegram en otro hilo (no bloquea la detección)
-        import threading
-        threading.Thread(
-            target=_enviar_telegram,
-            args=(alerta_id, datos_video, camara_id, clase, confianza),
-            daemon=True
-        ).start()
-
-# Envía el video al chat de Telegram del dueño de la cámara
-def _enviar_telegram(alerta_id: str, datos_video: dict, camara_id: str, clase: str, confianza: float):
     try:
-        from app.services.telegram_service import enviar_alerta_video
-        # Busca al dueño de la cámara y su chat_id de Telegram
-        camara = execute_one(
-            """SELECT u.telegram_chat_id, ub.nombre as ubicacion
-               FROM camaras c
-               JOIN usuarios u ON u.id = c.usuario_id
-               JOIN ubicaciones ub ON ub.id = c.ubicacion_id
-               WHERE c.id = %s""",
-            (camara_id,)
-        )
-        if camara and camara.get("telegram_chat_id"):
-            enviar_alerta_video(
-                chat_id=camara["telegram_chat_id"],
-                ruta_video=datos_video["ruta_archivo"],
-                ubicacion=camara["ubicacion"],
-                clase=clase,
-                confianza=confianza,
-                alerta_id=alerta_id
-            )
-        else:
-            print("Telegram no configurado para este usuario")
-    except Exception as e:
-        print(f"Error al enviar Telegram: {e}")
+        # Persiste la alerta en la BD
+        alerta_id = _guardar_alerta(camara_id, tipo_id, confianza)
+        print(f"Alerta guardada: {alerta_id}")
 
-# Reenvía la alerta por WebSocket a los clientes conectados
-def notificar_alerta_ws(alerta_id: str, camara_id: str, clase: str, confianza: float):
-    try:
-        from app.routers.websocket import manager
-        data = {
-            "tipo": "nueva_alerta",
-            "alerta_id": alerta_id,
-            "camara_id": camara_id,
-            "clase": clase,
-            "confianza": confianza
-        }
-        manager.broadcast_alertas_threadsafe(data)
+        # Graba un clip de los últimos segundos (si hay video, va adjunto a Telegram)
+        datos_video = grabar_clip(camara_id)
+        ruta_video = None
+        # Solo guarda el video si la alerta sigue existiendo (la cámara pudo
+        # eliminarse durante la grabación, lo que borra la alerta en cascada).
+        if datos_video and _alerta_existe(alerta_id):
+            video_id = _guardar_video(alerta_id, datos_video)
+            ruta_video = datos_video["ruta_archivo"]
+            print(f"Video guardado: {video_id}")
+
+        # Obtiene destino de Telegram y ubicación del dueño de la cámara
+        info = _info_notificacion(camara_id)
+
+        # Notifica por TODOS los canales vía el patrón Strategy. Cada estrategia
+        # decide si puede enviar (WebSocket siempre; Telegram solo si hay chat).
+        _notificador.notificar(AlertaPayload(
+            alerta_id=alerta_id,
+            camara_id=camara_id,
+            clase=clase,
+            confianza=confianza,
+            ubicacion=info.get("ubicacion") if info else None,
+            ruta_video=ruta_video,
+            chat_id_destino=info.get("telegram_chat_id") if info else None,
+        ))
     except Exception as e:
-        print(f"Error notificando alerta por WS: {e}")
+        # No propagar: un fallo procesando una alerta no debe tumbar el stream
+        print(f"Error procesando alerta de cámara {camara_id}: {e}")
+
+# Indica si una alerta sigue existiendo en la BD (pudo borrarse en cascada
+# si se eliminó la cámara durante el procesamiento)
+def _alerta_existe(alerta_id: str) -> bool:
+    return execute_one("SELECT id FROM alertas WHERE id = %s", (alerta_id,)) is not None
+
+# Busca el chat_id de Telegram del dueño y la ubicación de la cámara
+def _info_notificacion(camara_id: str):
+    return execute_one(
+        """SELECT u.telegram_chat_id, ub.nombre AS ubicacion
+           FROM camaras c
+           JOIN usuarios u ON u.id = c.usuario_id
+           JOIN ubicaciones ub ON ub.id = c.ubicacion_id
+           WHERE c.id = %s""",
+        (camara_id,)
+    )

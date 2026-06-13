@@ -6,8 +6,22 @@ import paho.mqtt.client as mqtt
 from datetime import datetime, timezone
 from app.config import get_settings
 from app.database.connection import execute_query, execute_one
+from app.services.notificacion import (
+    Notificador,
+    AlertaPayload,
+    NotificacionTelegram,
+    NotificacionWebSocket,
+)
 
 settings = get_settings()
+
+# Notificador (patrón Strategy) compartido para las alertas de sensores.
+# Usa las mismas estrategias que el motor de alertas de cámara, de modo que
+# una alerta de sensor también llega por WebSocket y Telegram.
+_notificador = Notificador([
+    NotificacionWebSocket(),
+    NotificacionTelegram(),
+])
 
 # Intervalo mínimo entre guardados (global, todos los dispositivos)
 INTERVALO_GUARDADO_S = 120
@@ -76,16 +90,29 @@ def _generar_alerta_sensor(dispositivo_id: str, motivo: str):
         print(f"Alerta sensor: error al insertar: {e}")
         return
 
-    try:
-        from app.routers.websocket import manager
-        manager.broadcast_alertas_threadsafe({
-            "tipo": "nueva_alerta",
-            "alerta_id": alerta_id,
-            "dispositivo_id": dispositivo_id,
-            "motivo": motivo,
-        })
-    except Exception as e:
-        print(f"Alerta sensor: error al notificar WS: {e}")
+    # Notifica por todos los canales con el mismo patrón Strategy que las
+    # alertas de cámara. La clase usa el motivo del umbral (ej. "temperatura").
+    info = _info_notificacion_sensor(dispositivo_id)
+    _notificador.notificar(AlertaPayload(
+        alerta_id=alerta_id,
+        camara_id=dispositivo_id,   # identifica el origen de la alerta
+        clase=motivo,
+        confianza=1.0,
+        ubicacion=info.get("ubicacion") if info else None,
+        ruta_video=None,            # los sensores no graban video
+        chat_id_destino=info.get("telegram_chat_id") if info else None,
+    ))
+
+# Busca el chat_id de Telegram del dueño y la ubicación del dispositivo
+def _info_notificacion_sensor(dispositivo_id: str):
+    return execute_one(
+        """SELECT u.telegram_chat_id, ub.nombre AS ubicacion
+           FROM dispositivos_iot d
+           JOIN usuarios u ON u.id = d.usuario_id
+           JOIN ubicaciones ub ON ub.id = d.ubicacion_id
+           WHERE d.id = %s""",
+        (dispositivo_id,)
+    )
 
 # Inserta una lectura del sensor en la BD y la devuelve
 def _guardar_lectura(dispositivo_id: str, datos: dict):

@@ -96,3 +96,22 @@ def enviar_alerta_video(
         )
     except Exception as e:
         print(f"Error al enviar Telegram: {e}")
+
+
+# Envía una alerta de solo texto (p. ej. sensores IoT, que no graban video)
+async def _enviar_texto_async(chat_id: str, texto: str):
+    bot = Bot(token=settings.telegram_token)
+    await bot.send_message(chat_id=chat_id, text=texto)
+
+
+# Construye el mensaje y lo envía por Telegram sin video adjunto
+def enviar_alerta_texto(chat_id: str, ubicacion: str, motivo: str):
+    texto = (
+        f"⚠️ Alerta de sensor\n"
+        f"📍 Ubicación: {ubicacion}\n"
+        f"🔍 Motivo: {motivo}"
+    )
+    try:
+        asyncio.run(_enviar_texto_async(chat_id, texto))
+    except Exception as e:
+        print(f"Error al enviar Telegram (texto): {e}")

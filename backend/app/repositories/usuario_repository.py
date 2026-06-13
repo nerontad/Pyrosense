@@ -1,5 +1,5 @@
 import uuid
-from app.repositories.base_repository import BaseRepository
+from app.repositories.base import BaseRepository
 
 
 class UsuarioRepository(BaseRepository):
