@@ -119,7 +119,7 @@ export default function Dispositivos() {
       )}
     >
       {/* Tabs con subrayado */}
-      <div className="flex gap-1 border-b border-line mb-10">
+      <div className="flex gap-1 border-b border-line mb-10 overflow-x-auto [&::-webkit-scrollbar]:hidden">
         <TabBtn active={tabActiva === 'dispositivos'} onClick={() => setTabActiva('dispositivos')}>
           Dispositivos
           <span className="ml-3 text-ash-500 tabular-nums">{dispositivos.length}</span>
@@ -152,14 +152,14 @@ export default function Dispositivos() {
                              hover:bg-char-800">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="font-mono text-[11px] text-ember-400">
+                      <p className="font-mono text-[13px] text-ember-400">
                         N{String(i + 1).padStart(2, '0')}
                       </p>
                       <h3 className="font-display type-expanded font-bold uppercase tracking-wide
                                      text-bone text-base mt-2 truncate">
                         {disp.nombre}
                       </h3>
-                      <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-ash-500 mt-1.5 truncate">
+                      <p className="font-mono text-[13px] uppercase tracking-[0.15em] text-ash-500 mt-1.5 truncate">
                         ↳ {ubi?.nombre || 'Sin ubicación'}
                       </p>
                     </div>
@@ -176,7 +176,7 @@ export default function Dispositivos() {
                   </div>
 
                   <div className="mt-7 pt-4 border-t border-line flex items-center justify-between gap-4">
-                    <p className="font-mono text-[11px] text-ash-500 truncate">
+                    <p className="font-mono text-[13px] text-ash-500 truncate">
                       {disp.id}
                     </p>
                     <div className="flex items-center gap-5 shrink-0">
@@ -207,7 +207,7 @@ export default function Dispositivos() {
               <article key={ubi.id}
                 className="grid grid-cols-12 items-center gap-4 px-5 sm:px-6 py-5
                            bg-char-850 hover:bg-char-800 transition-colors duration-200">
-                <span className="col-span-1 font-mono text-[11px] text-ember-400">
+                <span className="col-span-1 font-mono text-[13px] text-ember-400">
                   U{String(i + 1).padStart(2, '0')}
                 </span>
                 <div className="col-span-9 sm:col-span-5 min-w-0">
@@ -215,9 +215,9 @@ export default function Dispositivos() {
                                  text-bone text-sm truncate">
                     {ubi.nombre}
                   </h3>
-                  <p className="font-mono text-[11px] text-ash-500 mt-1 truncate">{ubi.id}</p>
+                  <p className="font-mono text-[13px] text-ash-500 mt-1 truncate">{ubi.id}</p>
                 </div>
-                <p className="hidden sm:block sm:col-span-4 font-mono text-[12px] text-ash-400 truncate">
+                <p className="hidden sm:block sm:col-span-4 font-mono text-[14px] text-ash-400 truncate">
                   {ubi.descripcion || '—'}
                 </p>
                 <div className="col-span-2 flex justify-end">
@@ -330,7 +330,7 @@ export default function Dispositivos() {
 function TabBtn({ active, onClick, children }) {
   return (
     <button onClick={onClick}
-      className={`px-4 pb-3 -mb-px font-mono text-[11px] uppercase tracking-[0.18em]
+      className={`shrink-0 whitespace-nowrap px-4 pb-3 -mb-px font-mono text-[13px] uppercase tracking-[0.18em]
                   border-b-2 transition-colors duration-200
                   ${active
                     ? 'text-bone border-ember-500'
@@ -349,7 +349,7 @@ function Empty({ kicker, title, desc, cta, onClick }) {
                      text-[clamp(1.5rem,3.4vw,2.4rem)] mt-5 max-w-lg leading-tight">
         {title}
       </h3>
-      <p className="relative font-mono text-[13px] text-ash-300 mt-5 max-w-md leading-relaxed">{desc}</p>
+      <p className="relative font-mono text-[15px] text-ash-300 mt-5 max-w-md leading-relaxed">{desc}</p>
       <button onClick={onClick} className="relative btn-fire mt-9">{cta}</button>
     </div>
   )

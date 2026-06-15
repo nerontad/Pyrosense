@@ -50,13 +50,15 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* Wordmark vertical */}
-        <div className="flex-1 flex items-center justify-center min-h-0 overflow-hidden">
+        {/* Wordmark vertical: solo la marca para que SIEMPRE calce en el alto de la spine.
+            La etiqueta completa ("Vigilancia de incendios") vive en el topbar móvil y el póster de acceso. */}
+        <div className="flex-1 flex items-center justify-center min-h-0 overflow-hidden py-6">
           <span
-            className="font-mono text-[10px] uppercase tracking-mega text-ash-500 select-none whitespace-nowrap"
+            className="font-mono text-[15px] font-medium uppercase tracking-[0.32em] text-ash-400 select-none whitespace-nowrap
+                       [@media(max-height:700px)]:hidden"
             style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
           >
-            Pyrosense — Vigilancia de incendios
+            Pyrosense
           </span>
         </div>
 
@@ -85,7 +87,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-14 pl-4 pr-2">
           <Link to="/" className="flex items-center gap-3 text-ember-500">
             <IconFlame small/>
-            <span className="font-mono text-[11px] uppercase tracking-mega text-bone">
+            <span className="font-mono text-[13px] uppercase tracking-mega text-bone">
               Pyrosense
             </span>
           </Link>
@@ -109,7 +111,7 @@ export default function Navbar() {
                               transition-colors
                               ${active ? 'text-ember-400' : 'text-ash-300 hover:text-bone'}`}>
                   <span className="flex items-baseline gap-4">
-                    <span className="font-mono text-[11px] text-ash-500">0{i + 1}</span>
+                    <span className="font-mono text-[13px] text-ash-500">0{i + 1}</span>
                     <span className="font-display type-expanded font-bold uppercase tracking-wide text-sm">
                       {item.label}
                     </span>
@@ -121,15 +123,15 @@ export default function Navbar() {
             <Link to="/perfil"
               className="flex items-center justify-between px-5 py-4 border-b border-line
                          text-ash-300 hover:text-bone transition-colors">
-              <span className="font-mono text-[12px] uppercase tracking-[0.2em]">
+              <span className="font-mono text-[14px] uppercase tracking-[0.2em]">
                 {usuario?.nombre || 'Mi perfil'}
               </span>
-              <span className="font-mono text-[11px] text-ash-500 truncate max-w-[50%]">
+              <span className="font-mono text-[13px] text-ash-500 truncate max-w-[50%]">
                 {usuario?.email}
               </span>
             </Link>
             <button onClick={handleLogout}
-              className="w-full text-left px-5 py-4 font-mono text-[12px] uppercase
+              className="w-full text-left px-5 py-4 font-mono text-[14px] uppercase
                          tracking-[0.2em] text-ember-400 hover:bg-char-850 transition-colors">
               Cerrar sesión →
             </button>
@@ -159,7 +161,7 @@ function SpineLink({ item, active }) {
       <span className="transition-transform duration-200 ease-out-strong group-hover:-translate-y-0.5">
         <Icon/>
       </span>
-      <span className="font-mono text-[10px] uppercase tracking-[0.18em]">
+      <span className="font-mono text-[12px] uppercase tracking-[0.18em]">
         {item.label}
       </span>
     </Link>

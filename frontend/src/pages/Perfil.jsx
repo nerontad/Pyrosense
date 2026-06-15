@@ -66,9 +66,9 @@ export default function Perfil() {
     >
       {/* Split asimétrico: identidad 4 / ajustes 8.
           En móvil el bloque de identidad se vuelve horizontal para no ocupar toda la pantalla. */}
-      <div className="grid grid-cols-12 gap-x-10 gap-y-12">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-12">
         {/* Bloque de identidad */}
-        <aside className="col-span-12 lg:col-span-4">
+        <aside className="lg:col-span-4">
           <div className="border border-line animate-rise flex flex-row lg:flex-col">
             <div className="relative w-28 sm:w-36 lg:w-full aspect-square shrink-0
                             flex items-center justify-center
@@ -83,24 +83,24 @@ export default function Perfil() {
                              text-bone text-lg lg:text-xl leading-tight break-words">
                 {usuario?.nombre || 'Usuario'}
               </h2>
-              <p className="font-mono text-[13px] text-ash-300 mt-2 lg:mt-3 break-all">
+              <p className="font-mono text-[15px] text-ash-300 mt-2 lg:mt-3 break-all">
                 {usuario?.email}
               </p>
               <div className="flex flex-row flex-wrap lg:flex-col items-start gap-2 mt-4 lg:mt-7">
-                <span className="tag tag-moss">
+                <span className="tag tag-moss whitespace-normal text-left">
                   <span className="dot bg-moss-400 animate-blink"/>
                   Sesión activa
                 </span>
                 {usuario?.telegram_chat_id
-                  ? <span className="tag tag-mute">Telegram enlazado</span>
-                  : <span className="tag tag-flare">Telegram sin configurar</span>}
+                  ? <span className="tag tag-mute whitespace-normal text-left">Telegram enlazado</span>
+                  : <span className="tag tag-flare whitespace-normal text-left">Telegram sin configurar</span>}
               </div>
             </div>
           </div>
         </aside>
 
         {/* Ajustes */}
-        <div className="col-span-12 lg:col-span-8 space-y-16">
+        <div className="lg:col-span-8 space-y-16">
           <Section
             num="A"
             title="Notificaciones Telegram"
@@ -165,7 +165,7 @@ function Section({ num, title, desc, children }) {
       <header className="border-t border-line">
         <div className="-translate-y-1/2">
           <h3 className="inline-flex items-baseline gap-4 bg-char-900 pr-5">
-            <span className="font-mono text-[11px] text-ember-500">{num}</span>
+            <span className="font-mono text-[13px] text-ember-500">{num}</span>
             <span className="font-display type-expanded font-bold uppercase tracking-wide
                              text-bone text-base">
               {title}
@@ -174,7 +174,7 @@ function Section({ num, title, desc, children }) {
         </div>
       </header>
       {desc && (
-        <p className="font-mono text-[13px] text-ash-300 mb-6 tracking-wide leading-relaxed">
+        <p className="font-mono text-[15px] text-ash-300 mb-6 tracking-wide leading-relaxed">
           {desc}
         </p>
       )}
@@ -188,7 +188,7 @@ function Mensaje({ msg }) {
   if (!msg.texto) return null
   const ok = msg.tipo === 'ok'
   return (
-    <div className={`flex items-start gap-3 mt-4 px-4 py-3 border font-mono text-[13px] animate-fade-up
+    <div className={`flex items-start gap-3 mt-4 px-4 py-3 border font-mono text-[15px] animate-fade-up
                      ${ok
                        ? 'border-moss-500/60 text-moss-300'
                        : 'border-ember-500/50 text-ember-300'}`}>

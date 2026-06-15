@@ -117,7 +117,7 @@ export default function Camaras() {
               </h2>
             </div>
           </header>
-          <p className="font-mono text-[13px] text-ash-300 mb-6 tracking-wide">
+          <p className="font-mono text-[15px] text-ash-300 mb-6 tracking-wide">
             Usa la cámara de tu notebook o celular para probar la detección de fuego/humo en tiempo real.
           </p>
           <DetectorLocal />
@@ -134,7 +134,7 @@ export default function Camaras() {
                          text-[clamp(1.5rem,3.4vw,2.4rem)] mt-5 max-w-lg leading-tight">
             Ningún punto de <span className="text-fire">vigilancia</span> activo
           </h3>
-          <p className="relative font-mono text-[13px] text-ash-300 mt-5 max-w-md leading-relaxed">
+          <p className="relative font-mono text-[15px] text-ash-300 mt-5 max-w-md leading-relaxed">
             Agrega tu primera cámara RTSP para que el modelo de visión
             empiece a vigilar el perímetro.
           </p>
@@ -153,11 +153,11 @@ export default function Camaras() {
                 <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-line
                                 transition-colors duration-200 group-hover:border-b-line-ember">
                   <div className="flex items-baseline gap-3 min-w-0">
-                    <span className="font-mono text-[11px] text-ember-400 shrink-0">
+                    <span className="font-mono text-[13px] text-ember-400 shrink-0">
                       C{String(i + 1).padStart(2, '0')}
                     </span>
                     <h3 className="font-display type-expanded font-bold uppercase tracking-wide
-                                   text-bone text-[13px] truncate">
+                                   text-bone text-[15px] truncate">
                       {cam.nombre}
                     </h3>
                   </div>
@@ -176,7 +176,7 @@ export default function Camaras() {
 
                 {/* Pie con ubicación y motor de detección */}
                 <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-t border-line mt-auto">
-                  <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ash-400 truncate"
+                  <p className="font-mono text-[13px] uppercase tracking-[0.12em] text-ash-400 truncate"
                      title={cam.url_rtsp}>
                     ↳ {ubi?.nombre || 'Sin ubicación'}
                   </p>

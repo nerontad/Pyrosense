@@ -40,7 +40,7 @@ export default function Modal({ open, onClose, title, subtitle, children, footer
               {title}
             </h2>
             {subtitle && (
-              <p className="font-mono text-[12px] text-ash-400 mt-2 tracking-wide">{subtitle}</p>
+              <p className="font-mono text-[14px] text-ash-400 mt-2 tracking-wide">{subtitle}</p>
             )}
           </div>
           <button onClick={onClose}

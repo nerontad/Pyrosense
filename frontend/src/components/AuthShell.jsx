@@ -1,3 +1,5 @@
+import Counter from './Counter'
+
 // Layout de las páginas de autenticación: póster tipográfico + formulario sin caja
 export default function AuthShell({ title, subtitle, children, footer }) {
   return (
@@ -24,7 +26,7 @@ export default function AuthShell({ title, subtitle, children, footer }) {
                 <path d="M12 2c1 3 4 5 4 9a4 4 0 1 1-8 0c0-2 1-3 1-5-2 1-4 4-4 7a7 7 0 1 0 14 0c0-5-4-7-7-11Z"/>
               </svg>
             </span>
-            <span className="font-mono text-[12px] uppercase tracking-mega text-bone">
+            <span className="font-mono text-[14px] uppercase tracking-mega text-bone">
               Pyrosense
             </span>
           </div>
@@ -37,7 +39,7 @@ export default function AuthShell({ title, subtitle, children, footer }) {
               antes que<br/>
               se propague.
             </h2>
-            <p className="font-mono text-[13px] text-ash-300 mt-7 leading-relaxed max-w-sm">
+            <p className="font-mono text-[15px] text-ash-300 mt-7 leading-relaxed max-w-sm">
               Visión artificial sobre cámaras IP, sensores ambientales distribuidos
               y alertas en tiempo real. Vigilancia continua, 24/7.
             </p>
@@ -45,20 +47,23 @@ export default function AuthShell({ title, subtitle, children, footer }) {
             {/* Telemetría del sistema como registro */}
             <div className="mt-10 border-t border-b border-line divide-y divide-line stagger">
               {[
-                { k: 'Latencia de detección', v: '< 2 s',  c: 'text-ember-300' },
-                { k: 'Precisión del modelo',  v: '90 %',   c: 'text-flare-300' },
-                { k: 'Disponibilidad',        v: '99.9 %', c: 'text-moss-300' },
+                { k: 'Latencia de detección', num: 2,    dec: 0, prefix: '< ', suffix: ' s', c: 'text-ember-300' },
+                { k: 'Precisión del modelo',  num: 90,   dec: 0, suffix: ' %', c: 'text-flare-300' },
+                { k: 'Disponibilidad',        num: 99.9, dec: 1, suffix: ' %', c: 'text-moss-300' },
               ].map(s => (
                 <div key={s.k} className="flex items-baseline justify-between py-4">
                   <span className="kicker">{s.k}</span>
-                  <span className={`num-display text-2xl ${s.c}`}>{s.v}</span>
+                  <Counter
+                    value={s.num} decimals={s.dec} prefix={s.prefix} suffix={s.suffix}
+                    className={`num-display text-2xl ${s.c}`}
+                  />
                 </div>
               ))}
             </div>
           </div>
 
           {/* Pie con coordenadas */}
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-ash-500">
+          <p className="font-mono text-[13px] uppercase tracking-[0.2em] text-ash-500">
             35.4264° S · 71.6554° W — Región del Maule, CL · © {new Date().getFullYear()}
           </p>
         </div>
@@ -73,7 +78,7 @@ export default function AuthShell({ title, subtitle, children, footer }) {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2c1 3 4 5 4 9a4 4 0 1 1-8 0c0-2 1-3 1-5-2 1-4 4-4 7a7 7 0 1 0 14 0c0-5-4-7-7-11Z"/>
             </svg>
-            <span className="font-mono text-[11px] uppercase tracking-mega text-bone">
+            <span className="font-mono text-[13px] uppercase tracking-mega text-bone">
               Pyrosense
             </span>
           </div>

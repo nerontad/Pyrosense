@@ -66,7 +66,7 @@ export default function Login() {
           <div className="flex items-baseline justify-between mb-2">
             <label className="label-tech mb-0">Contraseña</label>
             <Link to="/recuperar"
-              className="link-grow font-mono text-[11px] uppercase tracking-[0.15em]
+              className="link-grow font-mono text-[13px] uppercase tracking-[0.15em]
                          text-ash-500 hover:text-ember-400 transition-colors">
               ¿Olvidaste tu clave?
             </Link>
@@ -81,7 +81,7 @@ export default function Login() {
               required
             />
             <button type="button" onClick={() => setMostrar(v => !v)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-[11px]
+              className="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-[13px]
                          uppercase tracking-[0.15em] text-ash-500 hover:text-bone transition-colors">
               {mostrar ? 'Ocultar' : 'Ver'}
             </button>

@@ -1,3 +1,5 @@
+import Counter from './Counter'
+
 // Series por tipo de sensor: color del medidor/valor y rango válido
 const SERIES = {
   naranja: { color: '#FF6A26', text: 'text-ember-300', etiqueta: 'Térmico',      range: { min: 0, max: 60 } },
@@ -23,7 +25,7 @@ export default function SensorCard({ titulo, valor, unidad, color = 'azul', esta
       <div className="flex items-start justify-between gap-3">
         <p className="kicker">{titulo}</p>
         {estado === 'live' && v !== null && (
-          <span className="flex items-center gap-1.5 font-mono text-[11px] uppercase
+          <span className="flex items-center gap-1.5 font-mono text-[13px] uppercase
                            tracking-[0.2em] text-moss-300">
             <span className="dot bg-moss-400 animate-blink"/>
             Vivo
@@ -32,10 +34,10 @@ export default function SensorCard({ titulo, valor, unidad, color = 'azul', esta
       </div>
 
       <div className="flex items-baseline gap-2 mt-5">
-        <span className={`num-display text-4xl ${v !== null ? s.text : 'text-ash-500'}`}>
-          {v !== null ? v.toFixed(1) : '——'}
-        </span>
-        <span className="font-mono text-[13px] text-ash-300">{unidad}</span>
+        {v !== null
+          ? <Counter value={v} decimals={1} className={`num-display text-4xl ${s.text}`}/>
+          : <span className="num-display text-4xl text-ash-500">——</span>}
+        <span className="font-mono text-[15px] text-ash-300">{unidad}</span>
       </div>
 
       {/* Medidor lineal: posición del valor sobre el rango del sensor */}
@@ -62,7 +64,7 @@ export default function SensorCard({ titulo, valor, unidad, color = 'azul', esta
             />
           )}
         </div>
-        <div className="flex items-baseline justify-between mt-2.5 font-mono text-[11px] text-ash-400">
+        <div className="flex items-baseline justify-between mt-2.5 font-mono text-[13px] text-ash-400">
           <span>{s.range.min}</span>
           <span className="uppercase tracking-[0.2em] text-ash-500 group-hover:text-ash-300 transition-colors duration-200">
             {s.etiqueta}

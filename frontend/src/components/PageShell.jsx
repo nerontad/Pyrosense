@@ -25,7 +25,7 @@ export default function PageShell({ index = '00', title, subtitle, actions, chil
                     {title}
                   </h1>
                   {subtitle && (
-                    <p className="font-mono text-[13px] text-ash-300 mt-4 tracking-wide max-w-xl">
+                    <p className="font-mono text-[15px] text-ash-300 mt-4 tracking-wide max-w-xl">
                       <span className="text-ember-500 mr-2">//</span>
                       {subtitle}
                     </p>

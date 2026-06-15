@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import PageShell from '../components/PageShell'
 import SensorCard from '../components/SensorCard'
 import GraficoSensor from '../components/GraficoSensor'
+import Counter from '../components/Counter'
 import { useWebSocket } from '../hooks/useWebSocket'
 import api from '../services/api'
 
@@ -50,7 +51,7 @@ export default function Dashboard() {
       <section className="grid grid-cols-12 border border-line mb-14 lg:mb-20 animate-rise">
         <div className={`relative col-span-12 lg:col-span-7 bg-char-850 p-7 sm:p-10 lg:p-12
                          border-b lg:border-b-0 lg:border-r border-line overflow-hidden
-                         ${enAlerta ? 'border-t-2 border-t-ember-500' : ''}`}>
+                         ${enAlerta ? 'border-t-2 border-t-ember-500 animate-breathe' : ''}`}>
           {/* Lavado de calor: brasa si hay alerta, musgo si está sano */}
           <div className={`absolute inset-0 pointer-events-none
                            ${enAlerta ? 'bg-heat-wash' : 'bg-moss-wash'}`}/>
@@ -65,7 +66,7 @@ export default function Dashboard() {
                              : 'text-moss-300 [text-shadow:0_0_28px_rgba(151,165,103,0.35)]'}`}>
               {enAlerta ? 'Alerta' : 'Nominal'}
             </p>
-            <p className="font-mono text-[13px] text-ash-300 mt-5 lg:mt-8 leading-relaxed">
+            <p className="font-mono text-[15px] text-ash-300 mt-5 lg:mt-8 leading-relaxed">
               <span className={enAlerta ? 'text-ember-300' : 'text-moss-300'}>
                 {stats.alertas24h} alerta{stats.alertas24h === 1 ? '' : 's'}
               </span>
@@ -84,19 +85,22 @@ export default function Dashboard() {
         <div className="col-span-12 lg:col-span-5 grid divide-y divide-line">
           <DataRow
             label="Temperatura media"
-            value={stats.tempProm !== null ? stats.tempProm.toFixed(1) : '——'}
+            value={stats.tempProm}
+            decimals={1}
             unit="°C"
             color="text-ember-300"
           />
           <DataRow
             label="Humedad media"
-            value={stats.humProm !== null ? stats.humProm.toFixed(0) : '——'}
+            value={stats.humProm}
+            decimals={0}
             unit="%"
             color="text-flare-300"
           />
           <DataRow
             label="Dispositivos activos"
-            value={`${stats.activos}`}
+            value={stats.activos}
+            decimals={0}
             unit={`/ ${stats.total}`}
             color="text-moss-300"
           />
@@ -117,14 +121,14 @@ export default function Dashboard() {
                 <header className="border-t border-line">
                   <div className="flex items-center justify-between gap-4 -translate-y-1/2">
                     <h2 className="bg-char-900 pr-5 flex items-baseline gap-4 min-w-0">
-                      <span className="font-mono text-[11px] text-ember-400">
+                      <span className="font-mono text-[13px] text-ember-400">
                         {String(i + 1).padStart(2, '0')}
                       </span>
                       <span className="font-display type-expanded font-bold uppercase tracking-wide
                                        text-bone text-base sm:text-lg truncate">
                         {disp.nombre}
                       </span>
-                      <span className="hidden sm:inline font-mono text-[11px] text-ash-500 truncate">
+                      <span className="hidden sm:inline font-mono text-[13px] text-ash-500 truncate">
                         {disp.id}
                       </span>
                     </h2>
@@ -170,14 +174,18 @@ export default function Dashboard() {
 }
 
 // Fila de telemetría del módulo de estado, con el valor en el color de su serie
-function DataRow({ label, value, unit, color = 'text-bone' }) {
+function DataRow({ label, value, decimals = 0, unit, color = 'text-bone' }) {
+  const sinDato = value === null || value === undefined
   return (
     <div className="group flex items-baseline justify-between bg-char-850 px-6 py-5 lg:px-9
                     transition-colors duration-200 hover:bg-char-800">
       <p className="kicker">{label}</p>
       <p className="flex items-baseline gap-2">
-        <span className={`num-display text-2xl sm:text-3xl ${color}`}>{value}</span>
-        <span className="font-mono text-[13px] text-ash-300">{unit}</span>
+        {sinDato
+          ? <span className={`num-display text-2xl sm:text-3xl ${color}`}>——</span>
+          : <Counter value={value} decimals={decimals}
+                     className={`num-display text-2xl sm:text-3xl ${color}`}/>}
+        <span className="font-mono text-[15px] text-ash-300">{unit}</span>
       </p>
     </div>
   )
@@ -193,7 +201,7 @@ function EmptyState() {
                      text-[clamp(1.5rem,3.4vw,2.4rem)] mt-5 max-w-lg leading-tight">
         Aún no hay dispositivos <span className="text-fire">en escucha</span>
       </h3>
-      <p className="relative font-mono text-[13px] text-ash-300 mt-5 max-w-md leading-relaxed">
+      <p className="relative font-mono text-[15px] text-ash-300 mt-5 max-w-md leading-relaxed">
         Registra tu primer sensor IoT para empezar a recibir lecturas
         de temperatura, humedad y CO₂ en tiempo real.
       </p>

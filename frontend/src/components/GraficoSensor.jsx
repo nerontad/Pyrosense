@@ -39,7 +39,7 @@ export default function GraficoSensor({ dispositivoId }) {
 
   if (!cargando && datos.length === 0) {
     return (
-      <div className="border border-line px-6 py-10 font-mono text-[13px] text-ash-400">
+      <div className="border border-line px-6 py-10 font-mono text-[15px] text-ash-400">
         // Sin lecturas históricas todavía
       </div>
     )
@@ -58,7 +58,7 @@ export default function GraficoSensor({ dispositivoId }) {
             <button
               key={s.key}
               onClick={() => setSerie(s.key)}
-              className={`px-3 pb-4 font-mono text-[11px] uppercase tracking-[0.18em]
+              className={`px-3 pb-4 font-mono text-[13px] uppercase tracking-[0.18em]
                           border-b-2 transition-colors duration-200
                           ${serie === s.key
                             ? ''

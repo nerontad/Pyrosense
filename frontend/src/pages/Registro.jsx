@@ -103,7 +103,7 @@ export default function Registro() {
                     style={{ background: i <= fuerza.nivel ? fuerza.color : 'rgba(237,230,218,0.13)' }}/>
                 ))}
               </div>
-              <p className="font-mono text-[11px] uppercase tracking-[0.2em] mt-2"
+              <p className="font-mono text-[13px] uppercase tracking-[0.2em] mt-2"
                  style={{ color: fuerza.color }}>
                 {fuerza.label}
               </p>

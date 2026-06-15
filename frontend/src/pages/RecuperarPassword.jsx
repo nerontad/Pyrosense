@@ -43,7 +43,7 @@ export default function RecuperarPassword() {
       {enviado ? (
         <div className="animate-fade-up">
           <p className="num-display uppercase text-4xl text-moss-300">Enviado →</p>
-          <p className="font-mono text-[13px] text-ash-300 mt-6 leading-relaxed">
+          <p className="font-mono text-[15px] text-ash-300 mt-6 leading-relaxed">
             Revisa la bandeja de <span className="text-bone">{email}</span>.
             <br/>El enlace de restablecimiento expira pronto.
           </p>

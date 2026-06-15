@@ -161,7 +161,7 @@ export default function DetectorLocal() {
             <p className="font-display type-expanded font-bold uppercase text-bone text-lg mt-3">
               Cámara del dispositivo
             </p>
-            <p className="font-mono text-[11px] text-ash-400 mt-2 tracking-wide">
+            <p className="font-mono text-[13px] text-ash-400 mt-2 tracking-wide">
               // Inicia la demo para detectar fuego y humo en vivo
             </p>
           </div>
@@ -169,7 +169,7 @@ export default function DetectorLocal() {
 
         {activo && (
           <div className="pointer-events-none absolute top-3 left-3">
-            <span className={`flex items-center gap-2 px-2 py-1 font-mono text-[11px]
+            <span className={`flex items-center gap-2 px-2 py-1 font-mono text-[13px]
                               font-semibold tracking-[0.2em] uppercase
                               ${hayFuego
                                 ? 'bg-ember-500 text-char-950'
@@ -191,7 +191,7 @@ export default function DetectorLocal() {
           {facingMode === 'environment' ? 'Usar frontal' : 'Usar trasera'}
         </button>
         {activo && (
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ash-400 ml-auto">
+          <span className="font-mono text-[13px] uppercase tracking-[0.2em] text-ash-400 ml-auto">
             {detecciones.length} detección(es)
           </span>
         )}

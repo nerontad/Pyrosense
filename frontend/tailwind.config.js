@@ -24,12 +24,12 @@ export default {
           800: '#1D150C',
           700: '#2B1E10',
         },
-        bone: '#F4EDDF',
+        bone: '#F8F3EA',
         ash: {
-          300: '#CCC1B2',
-          400: '#ADA193',
-          500: '#8D8173',
-          600: '#6B6055',
+          300: '#DED5C7',
+          400: '#C6BBAC',
+          500: '#A89D8F',
+          600: '#857B6E',
         },
         ember: {
           200: '#FFB088',
@@ -50,8 +50,8 @@ export default {
           500: '#C98A2E',
         },
         // Hairlines cálidas: la estructura del sistema es la línea
-        line: 'rgba(244, 237, 223, 0.16)',
-        'line-strong': 'rgba(244, 237, 223, 0.36)',
+        line: 'rgba(244, 237, 223, 0.22)',
+        'line-strong': 'rgba(244, 237, 223, 0.42)',
         'line-ember': 'rgba(255, 77, 0, 0.4)',
       },
       letterSpacing: {

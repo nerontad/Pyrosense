@@ -74,14 +74,14 @@ export default function Alertas() {
       </section>
 
       {/* Filtros: tabs con subrayado */}
-      <div className="flex gap-1 border-b border-line mb-10">
+      <div className="flex gap-1 border-b border-line mb-10 overflow-x-auto [&::-webkit-scrollbar]:hidden">
         {[
           { k: 'todas',      l: 'Todas' },
           { k: 'pendientes', l: `Pendientes (${stats.pendientes})` },
           { k: 'revisadas',  l: 'Revisadas' },
         ].map(f => (
           <button key={f.k} onClick={() => setFiltro(f.k)}
-            className={`px-4 pb-3 -mb-px font-mono text-[11px] uppercase tracking-[0.18em]
+            className={`shrink-0 whitespace-nowrap px-4 pb-3 -mb-px font-mono text-[13px] uppercase tracking-[0.18em]
                         border-b-2 transition-colors duration-200
                         ${filtro === f.k
                           ? 'text-bone border-ember-500'
@@ -103,7 +103,7 @@ export default function Alertas() {
               ? <>Sin eventos <span className="text-moss-300">detectados</span></>
               : 'Nada bajo este filtro'}
           </h3>
-          <p className="relative font-mono text-[13px] text-ash-300 mt-5 leading-relaxed">
+          <p className="relative font-mono text-[15px] text-ash-300 mt-5 leading-relaxed">
             {alertas.length === 0
               ? '// El sistema está vigilando. Las detecciones aparecerán aquí.'
               : '// Cambia el filtro para ver más eventos.'}
@@ -130,7 +130,7 @@ export default function Alertas() {
                   <p className="text-bone text-sm">
                     {fecha.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
                   </p>
-                  <p className="text-ash-500 text-[11px] uppercase tracking-[0.15em] mt-0.5">
+                  <p className="text-ash-500 text-[13px] uppercase tracking-[0.15em] mt-0.5">
                     {fecha.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' })}
                   </p>
                 </div>
@@ -157,7 +157,7 @@ export default function Alertas() {
                       Marcar revisada
                     </button>
                   ) : (
-                    <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-moss-300">
+                    <span className="font-mono text-[13px] uppercase tracking-[0.18em] text-moss-300">
                       ✓ Revisada
                     </span>
                   )}
@@ -209,7 +209,7 @@ function VideoModal({ alerta, onClose }) {
                            text-bone text-lg">
               {esIncendio ? 'Incendio detectado' : 'Humo detectado'}
             </h3>
-            <p className="font-mono text-[12px] text-ash-400 mt-2 tracking-wide">
+            <p className="font-mono text-[14px] text-ash-400 mt-2 tracking-wide">
               {new Date(alerta.ocurrido_en).toLocaleString('es-CL', {
                 day: '2-digit', month: 'long', year: 'numeric',
                 hour: '2-digit', minute: '2-digit'
@@ -241,13 +241,13 @@ function VideoModal({ alerta, onClose }) {
               className="w-full bg-char-950 aspect-video"
             />
           ) : (
-            <div className="font-mono text-[13px] text-ash-300 py-12 text-center">
+            <div className="font-mono text-[15px] text-ash-300 py-12 text-center">
               // No hay video disponible para esta alerta
             </div>
           )}
 
           {alerta.video?.ruta_archivo && (
-            <p className="font-mono text-[11px] text-ash-500 mt-4 truncate">
+            <p className="font-mono text-[13px] text-ash-500 mt-4 truncate">
               {alerta.video.ruta_archivo}
             </p>
           )}

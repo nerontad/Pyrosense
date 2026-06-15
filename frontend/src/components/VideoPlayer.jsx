@@ -42,13 +42,13 @@ export default function VideoPlayer({ urlHls }) {
       <div className="pointer-events-none absolute top-3 left-3">
         {estado === 'live' ? (
           <span className="flex items-center gap-2 bg-fire-grad text-char-950 shadow-ember-glow
-                           px-2 py-1 font-mono text-[11px] font-semibold tracking-[0.2em] uppercase">
+                           px-2 py-1 font-mono text-[13px] font-semibold tracking-[0.2em] uppercase">
             <span className="dot bg-char-950 animate-blink"/>
             Rec — Vivo
           </span>
         ) : (
           <span className="flex items-center gap-2 bg-char-950/80 border border-line text-ash-300
-                           px-2 py-1 font-mono text-[11px] tracking-[0.2em] uppercase">
+                           px-2 py-1 font-mono text-[13px] tracking-[0.2em] uppercase">
             {estado === 'error' ? 'Sin señal' : 'Conectando'}
           </span>
         )}
@@ -60,14 +60,14 @@ export default function VideoPlayer({ urlHls }) {
           <p className="font-display type-expanded font-bold uppercase text-bone text-lg">
             Sin señal
           </p>
-          <p className="font-mono text-[11px] text-ash-400 mt-1 tracking-wide">
+          <p className="font-mono text-[13px] text-ash-400 mt-1 tracking-wide">
             // El stream no está disponible
           </p>
         </div>
       )}
       {estado === 'cargando' && (
         <div className="absolute inset-0 flex items-center justify-center bg-char-950/60">
-          <span className="font-mono text-[11px] uppercase tracking-[0.3em] text-ash-400 animate-blink">
+          <span className="font-mono text-[13px] uppercase tracking-[0.3em] text-ash-400 animate-blink">
             Estableciendo enlace…
           </span>
         </div>
