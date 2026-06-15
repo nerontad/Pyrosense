@@ -1,7 +1,6 @@
-import uuid
 from fastapi import APIRouter, Depends
-from app.database.connection import execute_query, execute_one
 from app.routers.auth import get_current_user
+from app.repositories import ubicacion_repo
 from typing import List
 from pydantic import BaseModel
 
@@ -21,27 +20,15 @@ router = APIRouter(prefix="/ubicaciones", tags=["Ubicaciones"])
 # Lista las ubicaciones del usuario actual
 @router.get("/", response_model=List[UbicacionResponse])
 def listar_ubicaciones(usuario=Depends(get_current_user)):
-    return execute_query(
-        "SELECT * FROM ubicaciones WHERE usuario_id = %s ORDER BY nombre ASC",
-        (usuario["id"],),
-        fetch=True
-    )
+    return ubicacion_repo.listar_por_usuario(usuario["id"])
 
 # Crea una nueva ubicación para el usuario
 @router.post("/", response_model=UbicacionResponse)
 def crear_ubicacion(data: UbicacionCreate, usuario=Depends(get_current_user)):
-    ubi_id = str(uuid.uuid4())
-    execute_query(
-        "INSERT INTO ubicaciones (id, usuario_id, nombre, descripcion) VALUES (%s, %s, %s, %s)",
-        (ubi_id, usuario["id"], data.nombre, data.descripcion)
-    )
-    return execute_one("SELECT * FROM ubicaciones WHERE id = %s", (ubi_id,))
+    return ubicacion_repo.crear(usuario["id"], data.nombre, data.descripcion)
 
 # Elimina una ubicación del usuario
 @router.delete("/{ubi_id}")
 def eliminar_ubicacion(ubi_id: str, usuario=Depends(get_current_user)):
-    execute_query(
-        "DELETE FROM ubicaciones WHERE id = %s AND usuario_id = %s",
-        (ubi_id, usuario["id"])
-    )
+    ubicacion_repo.eliminar(ubi_id, usuario["id"])
     return {"mensaje": "Ubicación eliminada"}

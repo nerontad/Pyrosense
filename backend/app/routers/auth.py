@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.services.firebase_service import verificar_token_firebase, obtener_o_crear_usuario
-from app.database.connection import execute_one
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 security = HTTPBearer()

@@ -10,7 +10,6 @@ from app.services.vision_service import vision
 from app.services.stream_service import iniciar_stream, detener_todos
 from app.services.limpieza_service import iniciar_limpieza, detener_limpieza
 from app.services.telegram_service import configurar_webhook
-from app.database.connection import execute_query
 from app.middleware.security import SecurityHeadersMiddleware
 import os
 settings = get_settings()
@@ -25,13 +24,9 @@ async def lifespan(app: FastAPI):
     print(f"Modelo cargado: {vision.modelo_cargado()}")
 
     # Lanza un stream por cada cámara activa registrada en BD
-    camaras = execute_query(
-        "SELECT id, url_rtsp, nombre FROM camaras WHERE activo = 1",
-        fetch=True
-    )
-    
+    from app.repositories import camara_repo
     from app.utils.crypto_rtsp import descifrar_url
-    for cam in camaras:
+    for cam in camara_repo.listar_activas():
         print(f"Iniciando detección automática: {cam['nombre']}")
         iniciar_stream(cam["id"], descifrar_url(cam["url_rtsp"]))
 

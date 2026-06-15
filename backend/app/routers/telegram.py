@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
-from app.database.connection import execute_query, execute_one
 from app.config import get_settings
+from app.repositories import usuario_repo
 
 settings = get_settings()
 router = APIRouter(prefix="/telegram", tags=["Telegram"])
@@ -23,10 +23,7 @@ async def webhook(request: Request):
 
         # Comando /start: vincula o saluda al usuario
         if comando == "/start":
-            usuario = execute_one(
-                "SELECT id, nombre FROM usuarios WHERE telegram_chat_id = %s",
-                (chat_id,)
-            )
+            usuario = usuario_repo.obtener_por_telegram_chat_id(chat_id)
             if usuario:
                 # Usuario ya vinculado
                 await _responder(chat_id,
