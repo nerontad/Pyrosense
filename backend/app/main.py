@@ -89,9 +89,11 @@ app.include_router(tipos.router)
 app.include_router(telegram.router)
 app.include_router(vision_router.router)
 
-# Sirve los videos generados por las detecciones
-os.makedirs("videos", exist_ok=True)
-app.mount("/videos", StaticFiles(directory="videos"), name="videos")
+# Sirve los videos generados por las detecciones.
+# Usa la misma carpeta que video_service (configurable por VIDEO_OUTPUT_DIR),
+# para que apunte al volumen persistente si se monta uno en Railway.
+os.makedirs(settings.video_output_dir, exist_ok=True)
+app.mount("/videos", StaticFiles(directory=settings.video_output_dir), name="videos")
 
 
 @app.get("/")
