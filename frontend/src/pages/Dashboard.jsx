@@ -15,10 +15,23 @@ export default function Dashboard() {
   // WebSocket que recibe lecturas en tiempo real
   const { datos, conectado } = useWebSocket('/ws/sensores')
 
-  // Carga inicial de dispositivos y últimas alertas
+  // Carga dispositivos y alertas recientes. Las alertas se recargan también
+  // al volver a la pestaña, para reflejar las que se marcaron como revisadas
+  // en la página de Alertas (y que el estado vuelva a "Nominal").
   useEffect(() => {
     api.get('/dispositivos/').then(res => setDispositivos(res.data)).catch(() => {})
-    api.get('/alertas/?limite=5').then(res => setAlertasRecientes(res.data)).catch(() => {})
+
+    const cargarAlertas = () =>
+      api.get('/alertas/?limite=20').then(res => setAlertasRecientes(res.data)).catch(() => {})
+    cargarAlertas()
+
+    const alVolver = () => { if (!document.hidden) cargarAlertas() }
+    document.addEventListener('visibilitychange', alVolver)
+    window.addEventListener('focus', cargarAlertas)
+    return () => {
+      document.removeEventListener('visibilitychange', alVolver)
+      window.removeEventListener('focus', cargarAlertas)
+    }
   }, [])
 
   // Aplica las lecturas recibidas por WS sobre el estado
@@ -33,7 +46,7 @@ export default function Dashboard() {
 
   // Métricas agregadas mostradas en el módulo de estado
   const stats = calcularStats(dispositivos, lecturas, alertasRecientes)
-  const enAlerta = stats.alertas24h > 0
+  const enAlerta = stats.pendientes > 0
 
   return (
     <PageShell
@@ -68,9 +81,9 @@ export default function Dashboard() {
             </p>
             <p className="font-mono text-[15px] text-ash-300 mt-5 lg:mt-8 leading-relaxed">
               <span className={enAlerta ? 'text-ember-300' : 'text-moss-300'}>
-                {stats.alertas24h} alerta{stats.alertas24h === 1 ? '' : 's'}
+                {stats.pendientes} alerta{stats.pendientes === 1 ? '' : 's'}
               </span>
-              {' '}en las últimas 24 h
+              {' '}sin revisar
               <span className="mx-3 text-ash-500">·</span>
               {stats.activos}/{stats.total} dispositivos reportando
             </p>
@@ -223,16 +236,14 @@ function calcularStats(dispositivos, lecturas, alertas) {
     if (arr.length === 0) return null
     return arr.reduce((a, b) => a + Number(b), 0) / arr.length
   }
-  const ahora = Date.now()
-  const alertas24h = alertas.filter(a => {
-    const t = new Date(a.ocurrido_en).getTime()
-    return ahora - t < 24 * 3600 * 1000
-  }).length
+  // El sistema está "en alerta" mientras haya alertas sin revisar.
+  // Al marcarlas como revisadas, el contador baja y vuelve a "Nominal".
+  const pendientes = alertas.filter(a => !a.revisado).length
   return {
     total,
     activos,
     tempProm: promedio('temperatura'),
     humProm:  promedio('humedad'),
-    alertas24h,
+    pendientes,
   }
 }
